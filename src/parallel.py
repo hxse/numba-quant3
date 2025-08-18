@@ -19,7 +19,7 @@ nb_int = numba_config["nb"]["int"]
 nb_float = numba_config["nb"]["float"]
 nb_bool = numba_config["nb"]["bool"]
 
-print("parallel_entry", cache)
+print("parallel_entry cache", cache)
 
 
 @njit(parallel=True, cache=cache)

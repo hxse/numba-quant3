@@ -2,7 +2,8 @@ import numpy as np
 
 from utils.over_constants import numba_config
 
-from src.params import (
+
+from src.utils.nb_params import (
     create_params_list_template,
     create_params_dict_template,
     get_params_list_value,

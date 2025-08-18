@@ -1,17 +1,25 @@
-from numba import njit
+from numba import njit, types
+from numba.typed import List
 
 
 from src.utils.constants import numba_config
 
 
+from src.utils.nb_check_keys import check_keys
+
+
 cache = numba_config["cache"]
+
+
+signal_0_id = 0
+signal_0_keys = ()
 
 
 @njit(cache=cache)
 def calc_signal_0(signal_item, indicator_item, close):
-    sma = indicator_item["sma"]
-    sma2 = indicator_item["sma2"]
-    signal_item["enter_long"] = sma > sma2
-    signal_item["exit_long"] = sma < sma2
-    signal_item["enter_short"] = sma < sma2
-    signal_item["exit_short"] = sma > sma2
+    """
+    calc_signal_0是占位的空函数
+    """
+    exist_key = check_keys(signal_0_keys, indicator_item)
+    if not exist_key:
+        return

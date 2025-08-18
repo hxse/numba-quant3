@@ -3,12 +3,20 @@ from numba import njit
 from src.utils.constants import numba_config
 
 
+from src.utils.nb_check_keys import check_keys
+
+
 cache = numba_config["cache"]
+
+performance_keys = ("position", "price", "money")
 
 
 @njit(cache=cache)
 def calc_performance(performance_item, backtest_item, close, backtest_params):
-    # 这里实现最大回撤、夏普比率等计算
+    exist_key = check_keys(performance_keys, backtest_item)
+    if not exist_key:
+        return
+
     position = backtest_item["position"]
     price = backtest_item["price"]
     money = backtest_item["money"]

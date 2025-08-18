@@ -20,8 +20,13 @@ def get_indicator_params():
         key_type=types.unicode_type,
         value_type=nb_float,
     )
+    params["sma_enable"] = nb_float(0)
     params["sma_period"] = nb_float(14)
+
+    params["sma2_enable"] = nb_float(0)
     params["sma2_period"] = nb_float(14)
+
+    params["bbands_enable"] = nb_float(0)
     params["bbands_period"] = nb_float(14)
     params["bbands_std_mult"] = nb_float(2.0)
     return params
