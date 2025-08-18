@@ -30,8 +30,20 @@ def main(
     set_numba_dtypes(enable64=enable64, cache=cache)
     print(f"cache from cli: {cache}")
 
+    cache = numba_config["cache"]
+    nb_float = numba_config["nb"]["float"]
+    np_float = numba_config["np"]["float"]
+
     # 在解析参数并更新全局配置字典后，再导入 Numba 函数
-    from params import get_params_template
+    from params import (
+        create_params_list_template,
+        create_params_dict_template,
+        get_params_list_value,
+        set_params_list_value,
+        get_params_dict_value,
+        set_params_dict_value,
+        convert_params_dict_list,
+    )
     from utils.mock_data import get_mock_data
     from parallel import parallel_entry
 
@@ -43,7 +55,26 @@ def main(
 
     tohlcv_np = get_mock_data(data_count=3)
 
-    (indicator_params_list, backtest_params_list) = get_params_template(params_count=2)
+    (indicator_params_list, backtest_params_list) = create_params_list_template(
+        params_count=2
+    )
+    np_arr = get_params_list_value("sma_period", indicator_params_list)
+    indicator_params_list = set_params_list_value(
+        "sma_period", indicator_params_list, np.array([1, 2], dtype=np_float)
+    )
+
+    (indicator_params_dict, backtest_params_dict) = create_params_dict_template(
+        params_count=2
+    )
+    _indicator_params_list = convert_params_dict_list(indicator_params_dict)
+
+    _indicator_params_dict = get_params_dict_value("sma_period", indicator_params_dict)
+    _indicator_params_dict2 = set_params_dict_value(
+        "sma_period", indicator_params_dict, np.array([1, 2], dtype=np_float)
+    )
+    import pdb
+
+    pdb.set_trace()
 
     # 记录参数生成结束时间，并计算运行时间
     if show_timing:
