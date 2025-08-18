@@ -11,6 +11,8 @@ cache = numba_config["cache"]
 nb_float = numba_config["nb"]["float"]
 np_float = numba_config["np"]["float"]
 
+print("params cache", cache)
+
 
 @njit(cache=cache)
 def get_indicator_params():
@@ -111,7 +113,6 @@ def set_params_list_value(key, params_list, arr):
 
     for i in range(params_count):
         params_list[i][key] = arr[i]
-    return params_list
 
 
 @njit(cache=cache)
@@ -131,7 +132,6 @@ def set_params_dict_value(key: str, params_dict, arr: np.ndarray):
         assert params_count == len(arr), "更新数量应该和原始数量一致"
 
     params_dict[key] = arr
-    return params_dict
 
 
 @njit(cache=cache)

@@ -1,8 +1,5 @@
 import numpy as np
 import numba as nb
-from numba import njit, prange
-from numba.core import types
-from numba.typed import Dict
 
 
 numba_config = {}
@@ -22,12 +19,11 @@ def get_numba_dtypes(enable64: bool):
     return dtype_dict
 
 
-def set_numba_dtypes(cache: bool, enable64: bool):
-    global numba_config, np_int, np_float, np_bool, nb_int, nb_float, nb_bool
-
+def set_numba_dtypes(numba_config, cache: bool, enable64: bool):
     numba_config["cache"] = cache
     numba_config["enable64"] = enable64
 
     dtype_dict = get_numba_dtypes(enable64)
     for k, v in dtype_dict.items():
         numba_config[k] = v
+    return numba_config

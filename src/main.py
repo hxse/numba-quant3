@@ -27,7 +27,7 @@ def main(
         main_start_time = time.time()
 
     # 更新全局配置字典
-    set_numba_dtypes(enable64=enable64, cache=cache)
+    set_numba_dtypes(numba_config, enable64=enable64, cache=cache)
     print(f"cache from cli: {cache}")
 
     cache = numba_config["cache"]
