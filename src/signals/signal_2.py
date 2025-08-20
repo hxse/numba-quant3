@@ -5,14 +5,27 @@ from numba.typed import List
 from src.utils.constants import numba_config
 
 
-from src.utils.nb_check_keys import check_keys, check_mapping, check_all
+from src.utils.nb_check_keys import check_all
 
 cache = numba_config["cache"]
 
 signal_2_id = 2
-signal_2_keys = ("bbands_upper", "bbands_middle", "bbands_lower")
-signal_2_keys_mtf = ("sma", "sma2")
-# signal_2_keys_large = ()
+
+
+@njit
+def get_signal_2_keys():
+    _l = List.empty_list(types.unicode_type)
+    for i in ("bbands_upper", "bbands_middle", "bbands_lower"):
+        _l.append(i)
+    return _l
+
+
+@njit
+def get_signal_2_keys_mtf():
+    _l = List.empty_list(types.unicode_type)
+    for i in ("sma", "sma2"):
+        _l.append(i)
+    return _l
 
 
 @njit(cache=cache)
@@ -21,8 +34,8 @@ def calc_signal_2(
 ):
     exist_key = check_all(
         len(close),
-        signal_2_keys,
-        signal_2_keys_mtf,
+        get_signal_2_keys(),
+        get_signal_2_keys_mtf(),
         indicator_output,
         indicators_output_mtf,
         mapping_mtf,

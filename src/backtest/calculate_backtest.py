@@ -1,5 +1,8 @@
 import numpy as np
 from numba import njit
+from numba.core import types
+from numba.typed import Dict, List
+
 from src.utils.constants import numba_config
 
 
@@ -10,12 +13,17 @@ cache = numba_config["cache"]
 nb_float = numba_config["nb"]["float"]
 
 
-backtest_keys = ("enter_long", "exit_long", "enter_short", "exit_short")
+@njit(cache=cache)
+def get_backtest_keys():
+    _l = List.empty_list(types.unicode_type)
+    for i in ("enter_long", "exit_long", "enter_short", "exit_short"):
+        _l.append(i)
+    return _l
 
 
 @njit(cache=cache)
 def calc_backtest(backtest_output, signal_output, close, backtest_params):
-    exist_key = check_keys(backtest_keys, signal_output)
+    exist_key = check_keys(get_backtest_keys(), signal_output)
     if not exist_key:
         return
 

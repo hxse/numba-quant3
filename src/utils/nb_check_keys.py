@@ -18,10 +18,10 @@ print("params cache", cache)
 def check_keys(keys, dict_):
     if len(keys) == 0:
         return True
-    elif len(keys) == 1 and keys[0] == "":
-        return True
 
     for i in keys:
+        if i == "":
+            continue
         if i not in dict_:
             return False
 
@@ -29,13 +29,16 @@ def check_keys(keys, dict_):
 
 
 @njit(cache=cache)
-def check_mapping(signal_1_keys_large, mapping_large, data_count):
-    if len(signal_1_keys_large) > 0:
-        if mapping_large is None:
+def check_mapping(signal_keys_mtf, mapping_mtf, data_count):
+    if len(signal_keys_mtf) > 0:
+        if mapping_mtf is None:
             return False
-        if len(mapping_large) == 0:
+        if "mtf" not in mapping_mtf:
             return False
-        if len(mapping_large) != data_count:
+        m_mtf = mapping_mtf["mtf"]
+        if len(m_mtf) == 0:
+            return False
+        if len(m_mtf) != data_count:
             return False
 
     return True
@@ -44,21 +47,21 @@ def check_mapping(signal_1_keys_large, mapping_large, data_count):
 @njit(cache=cache)
 def check_all(
     data_count,
-    signal_1_keys,
-    signal_1_keys_large,
+    signal_keys,
+    signal_keys_mtf,
     indicator_output,
-    indicators_output_large,
-    mapping_large,
+    indicators_output_mtf,
+    mapping_mtf,
 ):
-    exist_key = check_keys(signal_1_keys, indicator_output)
+    exist_key = check_keys(signal_keys, indicator_output)
     if not exist_key:
         return False
 
-    exist_key = check_keys(signal_1_keys_large, indicators_output_large)
+    exist_key = check_keys(signal_keys_mtf, indicators_output_mtf)
     if not exist_key:
         return False
 
-    exist_mapping = check_mapping(signal_1_keys_large, mapping_large, data_count)
+    exist_mapping = check_mapping(signal_keys_mtf, mapping_mtf, data_count)
     if not exist_mapping:
         return False
 

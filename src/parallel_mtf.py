@@ -77,7 +77,7 @@ def init_output_all(params_count):
 
 
 @njit(parallel=True, cache=cache)
-def run_parallel_mtf_A(
+def run_parallel_mtf(
     tohlcv_np,
     indicator_params_list,
     backtest_params_list,

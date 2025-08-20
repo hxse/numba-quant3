@@ -44,12 +44,10 @@ def main(
     np_bool = numba_config["np"]["bool"]
 
     # 在解析参数并更新全局配置字典后，再导入 Numba 函数
-    from utils.handle_params import init_params_with_enable
+    from utils.handle_params import init_params
     from utils.mock_data import get_mock_data
 
-    from parallel import run_parallel
-    from parallel_mtf_A import run_parallel_mtf_A
-    from parallel_mtf_B import run_parallel_mtf_B
+    from parallel_mtf import run_parallel_mtf
     from signals.calculate_signal import signal_dict
 
     # 记录参数生成开始时间，并计算冷启动时间
@@ -61,10 +59,10 @@ def main(
     if show_timing:
         data_start_time = time.time()
         data_count = 40000
-        data_count_large = 10000
+        data_count_mtf = 10000
         tohlcv_np = get_mock_data(data_count=data_count)
-        tohlcv_np_large = get_mock_data(data_count=data_count_large)
-        mapping_large = np.zeros(tohlcv_np.shape[0], dtype=np_float)
+        tohlcv_np_mtf = get_mock_data(data_count=data_count_mtf)
+        mapping_mtf = np.zeros(tohlcv_np.shape[0], dtype=np_float)
         data_end_time = time.time()
         data_duration = data_end_time - data_start_time
         print(f"数据导入时间 (进入main到参数生成前): {data_duration:.4f} 秒")
@@ -74,17 +72,20 @@ def main(
 
     params_count = 1
     signal_select_id = 2
-    (indicator_params_list, backtest_params_list) = init_params_with_enable(
+    (
+        tohlcv_np,
+        indicator_params_list,
+        backtest_params_list,
+        tohlcv_np_mtf,
+        indicator_params_list_mtf,
+        mapping_mtf,
+    ) = init_params(
         params_count,
         signal_select_id,
         signal_dict,
-        enable_large=False,
-    )
-    (indicator_params_list_large, _) = init_params_with_enable(
-        params_count,
-        signal_select_id,
-        signal_dict,
-        enable_large=True,
+        tohlcv_np,
+        tohlcv_np_mtf,
+        mapping_mtf,
     )
 
     # 记录参数生成结束时间，并计算运行时间
@@ -97,27 +98,13 @@ def main(
     if show_timing:
         parallel_start_time = time.time()
 
-    # result = run_parallel(
-    #     tohlcv_np, indicator_params_list, backtest_params_list, None, None
-    # )
-    # (
-    #     indicators_output_list,
-    #     signals_output_list,
-    #     backtest_output_list,
-    #     performance_output_list,
-    #     indicators_output_list_large,
-    # ) = result
-
-    func_select = 1
-    funcs = (run_parallel_mtf_A, run_parallel_mtf_B)
-
-    result = funcs[func_select](
+    result = run_parallel_mtf(
         tohlcv_np,
         indicator_params_list,
         backtest_params_list,
-        tohlcv_np_large,
-        indicator_params_list_large,
-        mapping_mtf=mapping_large,
+        tohlcv_np_mtf,
+        indicator_params_list_mtf,
+        mapping_mtf=mapping_mtf,
     )
     (
         indicators_output_list,

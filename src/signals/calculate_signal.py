@@ -3,9 +3,24 @@ import numba as nb
 from numba import njit
 
 
-from .signal_0 import calc_signal_0, signal_0_keys, signal_0_keys_mtf, signal_0_id
-from .signal_1 import calc_signal_1, signal_1_keys, signal_1_keys_mtf, signal_1_id
-from .signal_2 import calc_signal_2, signal_2_keys, signal_2_keys_mtf, signal_2_id
+from .signal_0 import (
+    calc_signal_0,
+    get_signal_0_keys,
+    get_signal_0_keys_mtf,
+    signal_0_id,
+)
+from .signal_1 import (
+    calc_signal_1,
+    get_signal_1_keys,
+    get_signal_1_keys_mtf,
+    signal_1_id,
+)
+from .signal_2 import (
+    calc_signal_2,
+    get_signal_2_keys,
+    get_signal_2_keys_mtf,
+    signal_2_id,
+)
 
 from src.utils.constants import numba_config
 from src.utils.handle_params import convert_keys
@@ -21,18 +36,18 @@ nb_bool = numba_config["nb"]["bool"]
 signal_dict = {
     signal_0_id: {
         "func": calc_signal_0,
-        "keys": convert_keys(signal_0_keys),
-        "keys_large": convert_keys(signal_0_keys_mtf),
+        "keys": convert_keys(get_signal_0_keys()),
+        "keys_mtf": convert_keys(get_signal_0_keys_mtf()),
     },
     signal_1_id: {
         "func": calc_signal_1,
-        "keys": convert_keys(signal_1_keys),
-        "keys_large": convert_keys(signal_1_keys_mtf),
+        "keys": convert_keys(get_signal_1_keys()),
+        "keys_mtf": convert_keys(get_signal_1_keys_mtf()),
     },
     signal_2_id: {
         "func": calc_signal_2,
-        "keys": convert_keys(signal_2_keys),
-        "keys_large": convert_keys(signal_2_keys_mtf),
+        "keys": convert_keys(get_signal_2_keys()),
+        "keys_mtf": convert_keys(get_signal_2_keys_mtf()),
     },
 }
 

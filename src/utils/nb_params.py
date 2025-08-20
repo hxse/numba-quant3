@@ -45,7 +45,7 @@ def get_backtest_params():
 
 @njit(cache=cache)
 def create_params_list_template(params_count):
-    assert params_count > 0, "参数组合数量必须大于0"
+    assert params_count >= 0, "参数组合数量必须大于等于0"
     indicator_params_list = List.empty_list(
         Dict.empty(
             key_type=types.unicode_type,
@@ -119,6 +119,8 @@ def set_params_list_value(key, params_list, arr):
     )
 
     for i in range(params_count):
+        if i == "":
+            continue
         params_list[i][key] = arr[i]
 
 
@@ -179,3 +181,13 @@ def convert_params_dict_list(params_dict):
         params_list.append(params)
 
     return params_list
+
+
+@njit(cache=cache)
+def get_data_mapping(tohlcv_np, tohlcv_np_mtf):
+    _d = Dict.empty(
+        key_type=types.unicode_type,
+        value_type=nb_float[:],
+    )
+    _d["mtf"] = np.zeros(tohlcv_np.shape[0], dtype=nb_float)
+    return _d

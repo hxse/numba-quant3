@@ -11,7 +11,11 @@ np_float = numba_config["np"]["float"]
 print("params cache", cache)
 
 
-from .nb_params import create_params_list_template, set_params_list_value
+from .nb_params import (
+    create_params_list_template,
+    set_params_list_value,
+    get_data_mapping,
+)
 
 
 def convert_keys(keys):
@@ -25,33 +29,62 @@ def convert_keys(keys):
     return tuple(unique_list)
 
 
-def init_params_with_enable(
+def init_params(
     params_count,
     signal_select_id,
     signal_dict,
-    enable_large,
+    tohlcv_np,
+    tohlcv_np_mtf=None,
+    mapping_mtf=None,
 ):
-    keys = "keys_large" if enable_large else "keys"
+    result = []
+    for keys in ["keys", "keys_mtf"]:
+        signal_keys = signal_dict[signal_select_id][keys]
 
-    (indicator_params_list, backtest_params_list) = create_params_list_template(
-        params_count
-    )
-
-    set_params_list_value(
-        "signal_select",
-        backtest_params_list,
-        np.array([signal_select_id for i in range(params_count)], dtype=np_float),
-    )
-
-    signal_keys = signal_dict[signal_select_id][keys]
-
-    for i in signal_keys:
-        key = f"{i}_enable"
-        target_array = np.array([True for i in range(params_count)], dtype=np_float)
+        (indicator_params_list, backtest_params_list) = create_params_list_template(
+            params_count
+        )
 
         set_params_list_value(
-            key,
-            indicator_params_list,
-            target_array,
+            "signal_select",
+            backtest_params_list,
+            np.array([signal_select_id for i in range(params_count)], dtype=np_float),
         )
-    return indicator_params_list, backtest_params_list
+
+        for i in signal_keys:
+            key = f"{i}_enable"
+            target_array = np.array([True for i in range(params_count)], dtype=np_float)
+
+            set_params_list_value(
+                key,
+                indicator_params_list,
+                target_array,
+            )
+        result.append(
+            {
+                "indicator_params_list": indicator_params_list,
+                "backtest_params_list": backtest_params_list,
+            }
+        )
+
+    assert tohlcv_np is not None, "小周期数据不能为none"
+
+    indicator_params_list_mtf = result[1]["indicator_params_list"]
+    signal_keys = signal_dict[signal_select_id]["keys_mtf"]
+    if len(signal_keys) == 0:
+        tohlcv_np_mtf = None
+        mapping_mtf = None
+        indicator_params_list_mtf = None
+    else:
+        assert tohlcv_np_mtf is not None, "大周期数据不能为none"
+        mapping_mtf = get_data_mapping(tohlcv_np, tohlcv_np_mtf)
+
+    result_dict = {
+        "tohlcv_np": tohlcv_np,
+        "indicator_params_list": result[0]["indicator_params_list"],
+        "backtest_params_list": result[0]["backtest_params_list"],
+        "tohlcv_np_mtf": tohlcv_np_mtf,
+        "indicator_params_list_mtf": indicator_params_list_mtf,
+        "mapping_mtf": mapping_mtf,
+    }
+    return (v for k, v in result_dict.items())
