@@ -14,8 +14,8 @@ backtest_keys = ("enter_long", "exit_long", "enter_short", "exit_short")
 
 
 @njit(cache=cache)
-def calc_backtest(backtest_item, signal_item, close, backtest_params):
-    exist_key = check_keys(backtest_keys, signal_item)
+def calc_backtest(backtest_output, signal_output, close, backtest_params):
+    exist_key = check_keys(backtest_keys, signal_output)
     if not exist_key:
         return
 
@@ -23,8 +23,8 @@ def calc_backtest(backtest_item, signal_item, close, backtest_params):
     position = np.empty(num_data, dtype=nb_float)
     price = np.empty(num_data, dtype=nb_float)
     money = np.empty(num_data, dtype=nb_float)
-    enter_long = signal_item["enter_long"]
-    exit_long = signal_item["exit_long"]
+    enter_long = signal_output["enter_long"]
+    exit_long = signal_output["exit_long"]
 
     for i in range(len(close)):
         money[i] = close[i]
@@ -35,6 +35,6 @@ def calc_backtest(backtest_item, signal_item, close, backtest_params):
             position[i] = 0
             price[i] = close[i]
 
-    backtest_item["position"] = position
-    backtest_item["price"] = price
-    backtest_item["money"] = money
+    backtest_output["position"] = position
+    backtest_output["price"] = price
+    backtest_output["money"] = money

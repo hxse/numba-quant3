@@ -114,7 +114,9 @@ def get_params_list_value(key, params_list):
 @njit(cache=cache)
 def set_params_list_value(key, params_list, arr):
     params_count = len(params_list)
-    assert params_count == len(arr), "更新数量应该和原始数量一致"
+    assert params_count == len(arr), (
+        f"更新数量应该和原始数量一致{params_count} {len(arr)}"
+    )
 
     for i in range(params_count):
         params_list[i][key] = arr[i]

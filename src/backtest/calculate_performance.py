@@ -12,14 +12,14 @@ performance_keys = ("position", "price", "money")
 
 
 @njit(cache=cache)
-def calc_performance(performance_item, backtest_item, close, backtest_params):
-    exist_key = check_keys(performance_keys, backtest_item)
+def calc_performance(performance_output, backtest_output, close, backtest_params):
+    exist_key = check_keys(performance_keys, backtest_output)
     if not exist_key:
         return
 
-    position = backtest_item["position"]
-    price = backtest_item["price"]
-    money = backtest_item["money"]
+    position = backtest_output["position"]
+    price = backtest_output["price"]
+    money = backtest_output["money"]
 
     max_money = 0
     max_drawdown = 0
@@ -27,5 +27,5 @@ def calc_performance(performance_item, backtest_item, close, backtest_params):
         max_money = max(money[i], max_money)
         max_drawdown = max(max_money - money[i], max_drawdown)
 
-    performance_item["max_money"] = max_money
-    performance_item["max_drawdown"] = max_drawdown
+    performance_output["max_money"] = max_money
+    performance_output["max_drawdown"] = max_drawdown
