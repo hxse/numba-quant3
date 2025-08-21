@@ -11,7 +11,7 @@ nb_float = numba_config["nb"]["float"]
 
 
 @njit(cache=cache)
-def calc_indicators(indicator_output, close, param):
+def calc_indicators(indicator_output=None, close=None, param=None):
     if param["sma_enable"]:
         indicator_output["sma"] = calc_sma(close, param["sma_period"])
 

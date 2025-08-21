@@ -4,6 +4,21 @@ from numba import njit
 from numba.core import types
 from numba.typed import Dict, List
 
+# 从签名文件导入签名
+from utils.nb_params_signature import (
+    get_indicator_params_signature,
+    get_backtest_params_signature,
+    create_params_list_template_signature,
+    create_params_dict_template_signature,
+    get_params_list_value_signature,
+    set_params_list_value_signature,
+    get_params_dict_value_signature,
+    set_params_dict_value_signature,
+    convert_params_dict_list_signature,
+    get_data_mapping_signature,
+)
+
+
 # 从全局配置中获取 Numba 类型
 from src.utils.constants import numba_config
 
@@ -13,7 +28,7 @@ nb_float = numba_config["nb"]["float"]
 np_float = numba_config["np"]["float"]
 
 
-@njit(cache=cache)
+@njit(get_indicator_params_signature, cache=cache)
 def get_indicator_params():
     params = Dict.empty(
         key_type=types.unicode_type,
@@ -31,7 +46,7 @@ def get_indicator_params():
     return params
 
 
-@njit(cache=cache)
+@njit(get_backtest_params_signature, cache=cache)
 def get_backtest_params():
     params = Dict.empty(
         key_type=types.unicode_type,
@@ -42,7 +57,7 @@ def get_backtest_params():
     return params
 
 
-@njit(cache=cache)
+@njit(create_params_list_template_signature, cache=cache)
 def create_params_list_template(params_count):
     assert params_count >= 0, "参数组合数量必须大于等于0"
     indicator_params_list = List.empty_list(
@@ -65,7 +80,7 @@ def create_params_list_template(params_count):
     return (indicator_params_list, backtest_params_list)
 
 
-@njit(cache=cache)
+@njit(create_params_dict_template_signature, cache=cache)
 def create_params_dict_template(params_count):
     """
     根据numba文档, 目前只支持List里面放Dict, 不支持Dict里面放List
@@ -100,7 +115,7 @@ def create_params_dict_template(params_count):
     return (indicator_params_dict, backtest_params_dict)
 
 
-@njit(cache=cache)
+@njit(get_params_list_value_signature, cache=cache)
 def get_params_list_value(key, params_list):
     params_count = len(params_list)
     arr = np.zeros(params_count, dtype=nb_float)
@@ -110,7 +125,7 @@ def get_params_list_value(key, params_list):
     return arr
 
 
-@njit(cache=cache)
+@njit(set_params_list_value_signature, cache=cache)
 def set_params_list_value(key, params_list, arr):
     params_count = len(params_list)
     assert params_count == len(arr), (
@@ -123,12 +138,12 @@ def set_params_list_value(key, params_list, arr):
         params_list[i][key] = arr[i]
 
 
-@njit(cache=cache)
+@njit(get_params_dict_value_signature, cache=cache)
 def get_params_dict_value(key: str, params_dict):
     return params_dict[key]
 
 
-@njit(cache=cache)
+@njit(set_params_dict_value_signature, cache=cache)
 def set_params_dict_value(key: str, params_dict, arr: np.ndarray):
     first_key = ""
     for k in params_dict.keys():
@@ -142,7 +157,7 @@ def set_params_dict_value(key: str, params_dict, arr: np.ndarray):
     params_dict[key] = arr
 
 
-@njit(cache=cache)
+@njit(convert_params_dict_list_signature, cache=cache)
 def convert_params_dict_list(params_dict):
     first_key = ""
     for k in params_dict.keys():
@@ -183,7 +198,7 @@ def convert_params_dict_list(params_dict):
 
 
 # --- 优化后的映射函数 ---
-@njit(cache=cache)
+@njit(get_data_mapping_signature, cache=cache)
 def get_data_mapping(tohlcv_np, tohlcv_np_mtf):
     _d = Dict.empty(
         key_type=types.unicode_type,

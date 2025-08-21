@@ -13,6 +13,8 @@ from src.backtest.calculate_backtest import calc_backtest
 from src.backtest.calculate_performance import calc_performance
 
 
+from parallel_signature import signature
+
 cache = numba_config["cache"]
 
 nb_int = numba_config["nb"]["int"]
@@ -42,16 +44,26 @@ def init_tohlcv(np_data):
 
 @njit(cache=cache)
 def init_output_all(params_count):
-    # 在 @njit 之外进行预分配
-    # 1. 创建一个 Typed List，元素类型是 Dict
-    indicators_output_list = List()
-    signals_output_list = List()
-    backtest_output_list = List()
-    performance_output_list = List()
-    indicators_output_list_mtf = List()
-    # 2. 预填充 List，使其具有正确的长度
+    # 使用显式类型创建 Typed List
+    indicators_output_list = List.empty_list(
+        Dict.empty(key_type=types.unicode_type, value_type=nb_float[:])
+    )
+    signals_output_list = List.empty_list(
+        Dict.empty(key_type=types.unicode_type, value_type=nb_bool[:])
+    )
+    backtest_output_list = List.empty_list(
+        Dict.empty(key_type=types.unicode_type, value_type=nb_float[:])
+    )
+    performance_output_list = List.empty_list(
+        Dict.empty(key_type=types.unicode_type, value_type=nb_float)
+    )
+    indicators_output_list_mtf = List.empty_list(
+        Dict.empty(key_type=types.unicode_type, value_type=nb_float[:])
+    )
+
+    # 预填充列表
     for _ in range(params_count):
-        # 填充一个空的字典，这样 List 就有了确定的元素类型和长度
+        # 填充一个空的字典
         indicators_output_list.append(
             Dict.empty(key_type=types.unicode_type, value_type=nb_float[:])
         )
@@ -76,7 +88,8 @@ def init_output_all(params_count):
     )
 
 
-@njit(parallel=True, cache=cache)
+@njit(signature, parallel=True, cache=cache)
+# @njit(parallel=True, cache=cache)
 def run_parallel_mtf(
     tohlcv_np,
     indicator_params_list,
