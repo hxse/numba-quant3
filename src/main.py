@@ -60,8 +60,8 @@ def main(
         data_start_time = time.time()
         data_count = 40000
         data_count_mtf = 10000
-        tohlcv_np = get_mock_data(data_count=data_count)
-        tohlcv_np_mtf = get_mock_data(data_count=data_count_mtf)
+        tohlcv_np = get_mock_data(data_count=data_count, period="15m")
+        tohlcv_np_mtf = get_mock_data(data_count=data_count_mtf, period="4h")
         mapping_mtf = np.zeros(tohlcv_np.shape[0], dtype=np_float)
         data_end_time = time.time()
         data_duration = data_end_time - data_start_time
@@ -70,8 +70,8 @@ def main(
     if show_timing:
         params_start_time = time.time()
 
-    params_count = 1
-    signal_select_id = 2
+    params_count = 2
+    signal_select_id = 3
     (
         tohlcv_np,
         indicator_params_list,
@@ -111,7 +111,7 @@ def main(
         signals_output_list,
         backtest_output_list,
         performance_output_list,
-        indicators_output_list_large,
+        indicators_output_list_mtf,
     ) = result
 
     # 记录 run_parallel 函数结束时间并打印内核运行时间

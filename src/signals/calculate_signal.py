@@ -21,6 +21,12 @@ from .signal_2 import (
     get_signal_2_keys_mtf,
     signal_2_id,
 )
+from .signal_3 import (
+    calc_signal_3,
+    get_signal_3_keys,
+    get_signal_3_keys_mtf,
+    signal_3_id,
+)
 
 from src.utils.constants import numba_config
 from src.utils.handle_params import convert_keys
@@ -48,6 +54,11 @@ signal_dict = {
         "func": calc_signal_2,
         "keys": convert_keys(get_signal_2_keys()),
         "keys_mtf": convert_keys(get_signal_2_keys_mtf()),
+    },
+    signal_3_id: {
+        "func": calc_signal_3,
+        "keys": convert_keys(get_signal_3_keys()),
+        "keys_mtf": convert_keys(get_signal_3_keys_mtf()),
     },
 }
 
@@ -82,6 +93,14 @@ def calc_signal(
         )
     elif signal_select == signal_2_id:
         calc_signal_2(
+            signal_output,
+            indicator_output,
+            indicators_output_mtf,
+            mapping_mtf,
+            close,
+        )
+    elif signal_select == signal_3_id:
+        calc_signal_3(
             signal_output,
             indicator_output,
             indicators_output_mtf,

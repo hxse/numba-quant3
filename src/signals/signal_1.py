@@ -13,7 +13,7 @@ cache = numba_config["cache"]
 signal_1_id = 1
 
 
-@njit
+@njit(cache=cache)
 def get_signal_1_keys():
     _l = List.empty_list(types.unicode_type)
     for i in ("sma", "sma2"):
@@ -21,7 +21,7 @@ def get_signal_1_keys():
     return _l
 
 
-@njit
+@njit(cache=cache)
 def get_signal_1_keys_mtf():
     _l = List.empty_list(types.unicode_type)
     return _l

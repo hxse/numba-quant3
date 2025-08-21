@@ -8,10 +8,9 @@ from numba.typed import Dict, List
 from src.utils.constants import numba_config
 
 cache = numba_config["cache"]
+nb_int = numba_config["nb"]["int"]
 nb_float = numba_config["nb"]["float"]
 np_float = numba_config["np"]["float"]
-
-print("params cache", cache)
 
 
 @njit(cache=cache)
@@ -183,11 +182,28 @@ def convert_params_dict_list(params_dict):
     return params_list
 
 
+# --- 优化后的映射函数 ---
 @njit(cache=cache)
 def get_data_mapping(tohlcv_np, tohlcv_np_mtf):
     _d = Dict.empty(
         key_type=types.unicode_type,
-        value_type=nb_float[:],
+        value_type=nb_int[:],
     )
-    _d["mtf"] = np.zeros(tohlcv_np.shape[0], dtype=nb_float)
+    if (
+        tohlcv_np is None
+        or tohlcv_np_mtf is None
+        or tohlcv_np.shape[0] == 0
+        or tohlcv_np_mtf.shape[0] == 0
+    ):
+        _d["mtf"] = np.zeros(0, dtype=nb_int)
+        return _d
+
+    times = tohlcv_np[:, 0]
+    mtf_times = tohlcv_np_mtf[:, 0]
+
+    # 核心优化：使用 np.searchsorted 进行矢量化查找
+    # side='right' 找到第一个大于当前时间戳的位置
+    mapping_indices = np.searchsorted(mtf_times, times, side="right") - 1
+
+    _d["mtf"] = mapping_indices.astype(nb_int)
     return _d

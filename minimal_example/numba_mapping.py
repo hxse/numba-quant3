@@ -1,11 +1,13 @@
 import numpy as np
+import numba as nb
+from numba import njit
+from numba.typed import Dict
 
 
-# 从全局配置中获取 Numba 类型
-from src.utils.constants import numba_config
-
-
-np_float = numba_config["np"]["float"]
+# --- Numba 配置 ---
+cache = False
+np_float = np.float64
+nb_int = nb.int64
 
 
 def get_mock_data(data_count, period="15m"):
@@ -88,3 +90,70 @@ def get_mock_data(data_count, period="15m"):
     ).T.astype(np_float)
 
     return data
+
+
+# --- 优化后的映射函数 ---
+@njit(cache=cache)
+def get_data_mapping(tohlcv_np, tohlcv_np_mtf):
+    _d = Dict.empty(
+        key_type="unicode_type",
+        value_type=nb_int[:],
+    )
+    if (
+        tohlcv_np is None
+        or tohlcv_np_mtf is None
+        or tohlcv_np.shape[0] == 0
+        or tohlcv_np_mtf.shape[0] == 0
+    ):
+        _d["mtf"] = np.zeros(0, dtype=nb_int)
+        return _d
+
+    times = tohlcv_np[:, 0]
+    mtf_times = tohlcv_np_mtf[:, 0]
+
+    # 使用 np.searchsorted 进行矢量化查找
+    # side='right' 找到第一个大于当前时间戳的位置
+    mapping_indices = np.searchsorted(mtf_times, times, side="right") - 1
+
+    _d["mtf"] = mapping_indices
+    return _d
+
+
+# --- 示例测试代码 ---
+if __name__ == "__main__":
+    # 生成模拟数据
+    data_15m = get_mock_data(data_count=10, period="15m")
+    data_1h = get_mock_data(data_count=3, period="1h")
+
+    # 模拟一个数据缺失
+    data_15m_with_gap = np.delete(data_15m, obj=5, axis=0)
+
+    # 测试1: 正常映射
+    print("--- 正常映射测试 (15m -> 1h) ---")
+    mapping_result_1 = get_data_mapping(data_15m, data_1h)
+    print("15m数据时间戳:", data_15m[:, 0])
+    print("1h数据时间戳:", data_1h[:, 0])
+    print("映射结果 (15m -> 1h):", mapping_result_1["mtf"])
+
+    print("\n--- 验证正常映射 ---")
+    for i in range(data_15m.shape[0]):
+        mapped_idx = mapping_result_1["mtf"][i]
+        if mapped_idx != -1:
+            print(
+                f"15m time {data_15m[i, 0]} maps to 1h time {data_1h[mapped_idx, 0]} (idx: {mapped_idx})"
+            )
+
+    # 测试2: 包含数据缺失的映射
+    print("\n--- 包含数据缺失的映射测试 (15m带缺口 -> 1h) ---")
+    mapping_result_2 = get_data_mapping(data_15m_with_gap, data_1h)
+    print("15m带缺口数据时间戳:", data_15m_with_gap[:, 0])
+    print("1h数据时间戳:", data_1h[:, 0])
+    print("映射结果 (带缺口):", mapping_result_2["mtf"])
+
+    print("\n--- 验证带缺口映射 ---")
+    for i in range(data_15m_with_gap.shape[0]):
+        mapped_idx = mapping_result_2["mtf"][i]
+        if mapped_idx != -1:
+            print(
+                f"15m gap time {data_15m_with_gap[i, 0]} maps to 1h time {data_1h[mapped_idx, 0]} (idx: {mapped_idx})"
+            )

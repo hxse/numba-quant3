@@ -8,8 +8,6 @@ cache = numba_config["cache"]
 nb_float = numba_config["nb"]["float"]
 np_float = numba_config["np"]["float"]
 
-print("params cache", cache)
-
 
 from .nb_params import (
     create_params_list_template,
@@ -37,6 +35,12 @@ def init_params(
     tohlcv_np_mtf=None,
     mapping_mtf=None,
 ):
+    """
+    三个mtf参数: tohlcv_np_mtf, indicator_params_list_mtf, mapping_mtf
+    如果keys_mtf是(), 那么三个mtf参数都会被设为None
+    如果keys_mtf是(""),三个mtf参数都正常,只不过indicator_params_list_mtf不会有任何enable,需要tohlcv_np_mtf数据
+    如果keys_mtf是("sma")三个mtf参数都正常,indicator_params_list_mtf中的sma_enable会被打开, 需要tohlcv_np_mtf数据
+    """
     result = []
     for keys in ["keys", "keys_mtf"]:
         signal_keys = signal_dict[signal_select_id][keys]

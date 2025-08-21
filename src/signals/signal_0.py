@@ -14,13 +14,13 @@ cache = numba_config["cache"]
 signal_0_id = 0
 
 
-@njit
+@njit(cache=cache)
 def get_signal_0_keys():
     _l = List.empty_list(types.unicode_type)
     return _l
 
 
-@njit
+@njit(cache=cache)
 def get_signal_0_keys_mtf():
     _l = List.empty_list(types.unicode_type)  # 如果只用大周期tohlcv数据,可以用""占位
     return _l

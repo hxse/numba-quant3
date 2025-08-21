@@ -12,18 +12,18 @@ cache = numba_config["cache"]
 signal_2_id = 2
 
 
-@njit
+@njit(cache=cache)
 def get_signal_2_keys():
     _l = List.empty_list(types.unicode_type)
-    for i in ("bbands_upper", "bbands_middle", "bbands_lower"):
+    for i in ("sma", "sma2"):
         _l.append(i)
     return _l
 
 
-@njit
+@njit(cache=cache)
 def get_signal_2_keys_mtf():
     _l = List.empty_list(types.unicode_type)
-    for i in ("sma", "sma2"):
+    for i in ("",):
         _l.append(i)
     return _l
 
@@ -44,10 +44,9 @@ def calc_signal_2(
         return
 
     if exist_key:
-        bbands_upper = indicator_output["bbands_upper"]
-        bbands_middle = indicator_output["bbands_middle"]
-        bbands_lower = indicator_output["bbands_lower"]
-        signal_output["enter_long"] = close < bbands_lower
-        signal_output["exit_long"] = close > bbands_middle
-        signal_output["enter_short"] = close > bbands_upper
-        signal_output["exit_short"] = close < bbands_middle
+        sma = indicator_output["sma"]
+        sma2 = indicator_output["sma2"]
+        signal_output["enter_long"] = sma > sma2
+        signal_output["exit_long"] = sma < sma2
+        signal_output["enter_short"] = sma < sma2
+        signal_output["exit_short"] = sma > sma2
