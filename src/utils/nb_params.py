@@ -16,6 +16,7 @@ from utils.nb_params_signature import (
     set_params_dict_value_signature,
     convert_params_dict_list_signature,
     get_data_mapping_signature,
+    get_init_tohlcv_signature,
 )
 
 
@@ -29,11 +30,13 @@ np_float = numba_config["np"]["float"]
 
 
 @njit(get_indicator_params_signature, cache=cache)
-def get_indicator_params():
+def get_indicator_params(empty):
     params = Dict.empty(
         key_type=types.unicode_type,
         value_type=nb_float,
     )
+    if empty:
+        return params
     params["sma_enable"] = nb_float(0)
     params["sma_period"] = nb_float(14)
 
@@ -47,18 +50,20 @@ def get_indicator_params():
 
 
 @njit(get_backtest_params_signature, cache=cache)
-def get_backtest_params():
+def get_backtest_params(empty):
     params = Dict.empty(
         key_type=types.unicode_type,
         value_type=nb_float,
     )
+    if empty:
+        return params
     params["signal_select"] = nb_float(0)
     params["atr_sl_mult"] = nb_float(2.0)
     return params
 
 
 @njit(create_params_list_template_signature, cache=cache)
-def create_params_list_template(params_count):
+def create_params_list_template(params_count, empty):
     assert params_count >= 0, "参数组合数量必须大于等于0"
     indicator_params_list = List.empty_list(
         Dict.empty(
@@ -74,14 +79,14 @@ def create_params_list_template(params_count):
     )
 
     for n in range(params_count):
-        indicator_params_list.append(get_indicator_params())
-        backtest_params_list.append(get_backtest_params())
+        indicator_params_list.append(get_indicator_params(empty))
+        backtest_params_list.append(get_backtest_params(empty))
 
     return (indicator_params_list, backtest_params_list)
 
 
 @njit(create_params_dict_template_signature, cache=cache)
-def create_params_dict_template(params_count):
+def create_params_dict_template(params_count, empty):
     """
     根据numba文档, 目前只支持List里面放Dict, 不支持Dict里面放List
     所以,把List转成numpy数组解决问题
@@ -98,14 +103,14 @@ def create_params_dict_template(params_count):
         key_type=types.unicode_type, value_type=nb_float[:]
     )
 
-    params = get_indicator_params()
+    params = get_indicator_params(empty)
     for key in params.keys():
         # 直接创建 NumPy 数组，填充相同的值
         arr = np.zeros(params_count, dtype=nb_float)
         arr[:] = params[key]
         indicator_params_dict[key] = arr
 
-    params = get_backtest_params()
+    params = get_backtest_params(empty)
     for key in params.keys():
         # 直接创建 NumPy 数组，填充相同的值
         arr = np.zeros(params_count, dtype=nb_float)
@@ -197,7 +202,6 @@ def convert_params_dict_list(params_dict):
     return params_list
 
 
-# --- 优化后的映射函数 ---
 @njit(get_data_mapping_signature, cache=cache)
 def get_data_mapping(tohlcv_np, tohlcv_np_mtf):
     _d = Dict.empty(
@@ -210,7 +214,6 @@ def get_data_mapping(tohlcv_np, tohlcv_np_mtf):
         or tohlcv_np.shape[0] == 0
         or tohlcv_np_mtf.shape[0] == 0
     ):
-        _d["mtf"] = np.zeros(0, dtype=nb_int)
         return _d
 
     times = tohlcv_np[:, 0]
@@ -222,3 +225,21 @@ def get_data_mapping(tohlcv_np, tohlcv_np_mtf):
 
     _d["mtf"] = mapping_indices.astype(nb_int)
     return _d
+
+
+@njit(get_init_tohlcv_signature, cache=cache)
+def init_tohlcv(np_data):
+    tohlcv = Dict.empty(
+        key_type=types.unicode_type,
+        value_type=nb_float[:],
+    )
+    if np_data is None:
+        return tohlcv
+    assert np_data.shape[1] >= 6, "tohlcv数据列数不足"
+    tohlcv["time"] = np_data[:, 0]
+    tohlcv["open"] = np_data[:, 1]
+    tohlcv["high"] = np_data[:, 2]
+    tohlcv["low"] = np_data[:, 3]
+    tohlcv["close"] = np_data[:, 4]
+    tohlcv["volume"] = np_data[:, 5]
+    return tohlcv

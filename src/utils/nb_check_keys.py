@@ -31,8 +31,6 @@ def check_keys(keys, dict_):
 @njit(cache=cache)
 def check_mapping(signal_keys_mtf, mapping_mtf, data_count):
     if len(signal_keys_mtf) > 0:
-        if mapping_mtf is None:
-            return False
         if "mtf" not in mapping_mtf:
             return False
         m_mtf = mapping_mtf["mtf"]

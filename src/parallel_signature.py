@@ -13,7 +13,7 @@ nb_float = numba_config["nb"]["float"]  # e.g., types.float64
 nb_bool = numba_config["nb"]["bool"]  # e.g., types.boolean
 
 # 定义 numpy 数组类型
-tohlcv_np_type = nb_float[:, :]
+tohlcv_np_type = types.DictType(unicode_type, nb_float[:])
 
 # 定义字典类型：使用 types.DictType
 param_dict_type = types.DictType(unicode_type, nb_float)
@@ -35,9 +35,9 @@ input_signature = (
     tohlcv_np_type,
     params_list_type,
     params_list_type,
-    types.Optional(tohlcv_np_type),
-    types.Optional(params_list_type),
-    types.Optional(mapping_dict_type),
+    tohlcv_np_type,
+    params_list_type,
+    mapping_dict_type,
 )
 
 # 定义返回签名（使用 types.Tuple 表示返回的元组类型）

@@ -13,6 +13,7 @@ from .nb_params import (
     create_params_list_template,
     set_params_list_value,
     get_data_mapping,
+    init_tohlcv,
 )
 
 
@@ -46,7 +47,7 @@ def init_params(
         signal_keys = signal_dict[signal_select_id][keys]
 
         (indicator_params_list, backtest_params_list) = create_params_list_template(
-            params_count
+            params_count, empty=False
         )
 
         set_params_list_value(
@@ -56,6 +57,8 @@ def init_params(
         )
 
         for i in signal_keys:
+            if i == "":
+                continue
             key = f"{i}_enable"
             target_array = np.array([True for i in range(params_count)], dtype=np_float)
 
@@ -76,19 +79,25 @@ def init_params(
     indicator_params_list_mtf = result[1]["indicator_params_list"]
     signal_keys = signal_dict[signal_select_id]["keys_mtf"]
     if len(signal_keys) == 0:
-        tohlcv_np_mtf = None
-        mapping_mtf = None
-        indicator_params_list_mtf = None
+        tohlcv_mtf = init_tohlcv(None)
+        indicator_params_list_mtf = create_params_list_template(
+            params_count, empty=True
+        )[0]
+        mapping_mtf = get_data_mapping(None, None)
     else:
         assert tohlcv_np_mtf is not None, "大周期数据不能为none"
+        tohlcv_mtf = init_tohlcv(tohlcv_np_mtf)
         mapping_mtf = get_data_mapping(tohlcv_np, tohlcv_np_mtf)
 
+    tohlcv = init_tohlcv(tohlcv_np)
+
     result_dict = {
-        "tohlcv_np": tohlcv_np,
+        "tohlcv": tohlcv,
         "indicator_params_list": result[0]["indicator_params_list"],
         "backtest_params_list": result[0]["backtest_params_list"],
-        "tohlcv_np_mtf": tohlcv_np_mtf,
+        "tohlcv_mtf": tohlcv_mtf,
         "indicator_params_list_mtf": indicator_params_list_mtf,
         "mapping_mtf": mapping_mtf,
     }
+
     return (v for k, v in result_dict.items())

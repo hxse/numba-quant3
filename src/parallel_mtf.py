@@ -25,24 +25,6 @@ print("parallel_entry cache", cache)
 
 
 @njit(cache=cache)
-def init_tohlcv(np_data):
-    tohlcv = Dict.empty(
-        key_type=types.unicode_type,
-        value_type=nb_float[:],
-    )
-    if np_data is None:
-        return tohlcv
-    assert np_data.shape[1] >= 6, "tohlcv数据列数不足"
-    tohlcv["time"] = np_data[:, 0]
-    tohlcv["open"] = np_data[:, 1]
-    tohlcv["high"] = np_data[:, 2]
-    tohlcv["low"] = np_data[:, 3]
-    tohlcv["close"] = np_data[:, 4]
-    tohlcv["volume"] = np_data[:, 5]
-    return tohlcv
-
-
-@njit(cache=cache)
 def init_output_all(params_count):
     # 使用显式类型创建 Typed List
     indicators_output_list = List.empty_list(
@@ -89,14 +71,13 @@ def init_output_all(params_count):
 
 
 @njit(signature, parallel=True, cache=cache)
-# @njit(parallel=True, cache=cache)
 def run_parallel_mtf(
-    tohlcv_np,
+    tohlcv,
     indicator_params_list,
     backtest_params_list,
-    tohlcv_np_mtf=None,
-    indicator_params_list_mtf=None,
-    mapping_mtf=None,
+    tohlcv_mtf,
+    indicator_params_list_mtf,
+    mapping_mtf,
 ):
     """
     并发200配置和4万数据,如果加上njit,缓存,parallel,这个是0.1391 秒,0.1346 秒,0.1246 秒
@@ -105,9 +86,6 @@ def run_parallel_mtf(
     assert len(indicator_params_list) == len(backtest_params_list), (
         "参数组合数量需要相等"
     )
-
-    tohlcv = init_tohlcv(tohlcv_np)
-    tohlcv_mtf = init_tohlcv(tohlcv_np_mtf)
 
     close = tohlcv["close"]
 
@@ -123,21 +101,20 @@ def run_parallel_mtf(
 
     for i in prange(params_count):
         _i = nb_int(i)
+
         indicator_params = indicator_params_list[_i]
         backtest_params = backtest_params_list[_i]
+        indicator_params_mtf = indicator_params_list_mtf[_i]
 
         indicator_output = indicators_output_list[_i]
-
         signal_output = signals_output_list[_i]
         backtest_output = backtest_output_list[_i]
         performance_output = performance_output_list[_i]
+        indicators_output_mtf = indicators_output_list_mtf[_i]
 
         calc_indicators(indicator_output, close, indicator_params)
 
-        indicators_output_mtf = indicators_output_list_mtf[_i]
-
-        if tohlcv_np_mtf is not None and indicator_params_list_mtf is not None:
-            indicator_params_mtf = indicator_params_list_mtf[_i]
+        if len(tohlcv_mtf) > 0:
             close_mtf = tohlcv_mtf["close"]
             calc_indicators(indicators_output_mtf, close_mtf, indicator_params_mtf)
 

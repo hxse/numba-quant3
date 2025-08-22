@@ -71,7 +71,7 @@ def main(
         params_start_time = time.time()
 
     params_count = 2
-    signal_select_id = 1
+    signal_select_id = 3
     (
         tohlcv_np,
         indicator_params_list,
@@ -97,9 +97,6 @@ def main(
     # 记录 parallel_entry 函数开始时间
     if show_timing:
         parallel_start_time = time.time()
-    import pdb
-
-    pdb.set_trace()
 
     result = run_parallel_mtf(
         tohlcv_np,
