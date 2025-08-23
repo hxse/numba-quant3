@@ -1,31 +1,32 @@
 import numpy as np
 import numba as nb
 from numba import njit
+from enum import IntEnum, auto
 
 
 from .signal_0 import (
     calc_signal_0,
     get_signal_0_keys,
     get_signal_0_keys_mtf,
-    signal_0_id,
+    # signal_0_id,
 )
 from .signal_1 import (
     calc_signal_1,
     get_signal_1_keys,
     get_signal_1_keys_mtf,
-    signal_1_id,
+    # signal_1_id,
 )
 from .signal_2 import (
     calc_signal_2,
     get_signal_2_keys,
     get_signal_2_keys_mtf,
-    signal_2_id,
+    # signal_2_id,
 )
 from .signal_3 import (
     calc_signal_3,
     get_signal_3_keys,
     get_signal_3_keys_mtf,
-    signal_3_id,
+    # signal_3_id,
 )
 
 from src.utils.constants import numba_config
@@ -39,24 +40,27 @@ nb_float = numba_config["nb"]["float"]
 nb_bool = numba_config["nb"]["bool"]
 
 
+class SignalId(IntEnum):
+    signal_0_id = 0
+    signal_1_id = auto()
+    signal_2_id = auto()
+    signal_3_id = auto()
+
+
 signal_dict = {
-    signal_0_id: {
-        "func": calc_signal_0,
+    SignalId.signal_0_id.value: {
         "keys": convert_keys(get_signal_0_keys()),
         "keys_mtf": convert_keys(get_signal_0_keys_mtf()),
     },
-    signal_1_id: {
-        "func": calc_signal_1,
+    SignalId.signal_1_id.value: {
         "keys": convert_keys(get_signal_1_keys()),
         "keys_mtf": convert_keys(get_signal_1_keys_mtf()),
     },
-    signal_2_id: {
-        "func": calc_signal_2,
+    SignalId.signal_2_id.value: {
         "keys": convert_keys(get_signal_2_keys()),
         "keys_mtf": convert_keys(get_signal_2_keys_mtf()),
     },
-    signal_3_id: {
-        "func": calc_signal_3,
+    SignalId.signal_3_id.value: {
         "keys": convert_keys(get_signal_3_keys()),
         "keys_mtf": convert_keys(get_signal_3_keys_mtf()),
     },
@@ -72,10 +76,9 @@ def calc_signal(
     close,
     backtest_params,
 ):
-    # 使用 if/elif 结构进行分派
     signal_select = backtest_params["signal_select"]
 
-    if signal_select == signal_0_id:
+    if signal_select == SignalId.signal_0_id.value:
         calc_signal_0(
             signal_output,
             indicator_output,
@@ -83,7 +86,7 @@ def calc_signal(
             mapping_mtf,
             close,
         )
-    elif signal_select == signal_1_id:
+    elif signal_select == SignalId.signal_1_id.value:
         calc_signal_1(
             signal_output,
             indicator_output,
@@ -91,7 +94,7 @@ def calc_signal(
             mapping_mtf,
             close,
         )
-    elif signal_select == signal_2_id:
+    elif signal_select == SignalId.signal_2_id.value:
         calc_signal_2(
             signal_output,
             indicator_output,
@@ -99,7 +102,7 @@ def calc_signal(
             mapping_mtf,
             close,
         )
-    elif signal_select == signal_3_id:
+    elif signal_select == SignalId.signal_3_id.value:
         calc_signal_3(
             signal_output,
             indicator_output,
