@@ -47,7 +47,7 @@ def main(
     from utils.handle_params import init_params
     from utils.mock_data import get_mock_data
 
-    from parallel_mtf import run_parallel_mtf
+    from parallel import run_parallel
     from signals.calculate_signal import SignalId, signal_dict
 
     # 记录参数生成开始时间，并计算冷启动时间
@@ -102,7 +102,7 @@ def main(
     if show_timing:
         parallel_start_time = time.time()
 
-    result = run_parallel_mtf(
+    result = run_parallel(
         tohlcv_np,
         indicator_params_list,
         backtest_params_list,
