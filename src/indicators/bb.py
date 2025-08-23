@@ -3,10 +3,6 @@ from numba import njit, float64, int64
 from src.utils.constants import numba_config
 from src.indicators.sma import calc_sma
 
-
-from sys import float_info as sflt
-
-
 cache = numba_config["cache"]
 nb_int = numba_config["nb"]["int"]
 nb_float = numba_config["nb"]["float"]
@@ -75,6 +71,7 @@ def calc_stdev(close, period):
     return stdev_result
 
 
+# 硬编码签名以匹配 pandas-ta 接口
 @njit(nb_float[:, :](nb_float[:], nb_int, nb_float), cache=cache)
 def calc_bbands(close, length, std):
     bbands_period = length
@@ -97,20 +94,16 @@ def calc_bbands(close, length, std):
     upper_band = mid_band + deviations
     lower_band = mid_band - deviations
 
-    # 步骤 4: 计算带宽和百分比
+    # 步骤 4: 计算带宽和百分比，模仿 pandas-ta 的 non_zero_range 逻辑
     ulr = non_zero_range(upper_band, lower_band)
+    bandwidth = np.where(mid_band != 0, 100 * ulr / mid_band, np.nan)
 
-    # 带宽计算：当 mid_band 为 0 时，结果应为 inf 或 nan，这里用 nan
-    bandwidth = np.full(num_data, np.nan, dtype=nb_float)
-    non_zero_mid_mask = mid_band != 0
-    bandwidth[non_zero_mid_mask] = (
-        100 * ulr[non_zero_mid_mask] / mid_band[non_zero_mid_mask]
-    )
-
-    # 百分比计算：更直接的翻译
-    # 模仿 pandas-ta 的奇怪逻辑，对分子也使用 non_zero_range
-    numerator_p = non_zero_range(close, lower_band)
-    percent = numerator_p / ulr  # 让 NumPy 自行处理除法和 NaN/inf 的传播
+    # 显式处理接近零的情况，减少浮点误差
+    cl_diff = non_zero_range(close, lower_band)
+    # 确保除法安全：ulr 绝对值小于 1e-10 或 NaN 时，percent 为 NaN
+    valid_mask = ~np.isnan(ulr) & ~np.isnan(cl_diff) & (np.abs(ulr) > 1e-10)
+    percent = np.full(num_data, np.nan, dtype=nb_float)
+    percent[valid_mask] = cl_diff[valid_mask] / ulr[valid_mask]
 
     # 将结果整合到 NumPy 数组
     res_bbands[:, 0] = upper_band

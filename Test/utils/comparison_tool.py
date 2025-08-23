@@ -62,7 +62,14 @@ def get_leading_nan_counts_for_two_arrays(
     return nan_count_arr1, nan_count_arr2
 
 
-def assert_indicator_same(array1, array2, indicator_name, params_str):
+def assert_indicator_same(
+    array1,
+    array2,
+    indicator_name,
+    params_str,
+    custom_rtol=GLOBAL_RTOL,
+    custom_atol=GLOBAL_ATOL,
+):
     """
     通用函数，用于比较 array1 和 array2 实现的指标结果。
     """
@@ -104,8 +111,8 @@ def assert_indicator_same(array1, array2, indicator_name, params_str):
         np.testing.assert_allclose(
             array1[valid_indices],
             array2[valid_indices],
-            rtol=GLOBAL_RTOL,
-            atol=GLOBAL_ATOL,
+            rtol=custom_rtol,
+            atol=custom_atol,
             err_msg=f"{indicator_name} calculation mismatch for {params_str}",
         )
     print(f"{indicator_name} ({params_str}) accuracy test passed.")

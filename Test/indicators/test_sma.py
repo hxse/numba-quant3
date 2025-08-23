@@ -118,6 +118,8 @@ def test_accuracy(
         _func = getattr(ta, name)
         pandas_result = _func(close_series, length=int(period), talib=talib)
 
+        custom_params = {}
+
         assert_func = (
             assert_indicator_same if assert_mode else assert_indicator_different
         )
@@ -126,6 +128,7 @@ def test_accuracy(
             pandas_result,
             name,
             f"period {period}",
+            **custom_params,
         )
 
 

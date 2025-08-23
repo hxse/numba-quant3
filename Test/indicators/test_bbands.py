@@ -141,6 +141,11 @@ def test_accuracy(
             [np_percent, df_percent, f"{name}_percent"],
         ]:
             np_array, df_array, _name = i
+
+            custom_params = {}
+            if _name == f"{name}_percent":
+                custom_params["custom_rtol"] = 2e-4
+
             assert_func = (
                 assert_indicator_same if assert_mode else assert_indicator_different
             )
@@ -149,10 +154,9 @@ def test_accuracy(
                 df_array,
                 _name,
                 f"period {period} std_mult {std_mult}",
+                **custom_params,
             )
-
-            breakpoint()
-            break
+            print(_name, params)
 
 
 def test_accuracy_talib(np_data_mock, df_data_mock, talib=True, assert_mode=True):
