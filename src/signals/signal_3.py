@@ -30,10 +30,16 @@ def get_signal_3_keys_mtf():
 
 @njit(cache=cache)
 def calc_signal_3(
-    signal_output, indicator_output, indicators_output_mtf, mapping_mtf, close
+    _tohlcv,
+    _tohlcv_mtf,
+    mapping_mtf,
+    indicator_output,
+    indicators_output_mtf,
+    signal_output,
 ):
     exist_key = check_all(
-        len(close),
+        _tohlcv,
+        _tohlcv_mtf,
         get_signal_3_keys(),
         get_signal_3_keys_mtf(),
         indicator_output,
@@ -44,6 +50,7 @@ def calc_signal_3(
         return
 
     if exist_key:
+        close = _tohlcv["close"]
         sma = indicators_output_mtf["sma"][mapping_mtf["mtf"]]
         sma2 = indicators_output_mtf["sma2"][mapping_mtf["mtf"]]
         bbands_upper = indicator_output["bbands_upper"]

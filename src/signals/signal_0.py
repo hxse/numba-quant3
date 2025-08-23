@@ -28,14 +28,20 @@ def get_signal_0_keys_mtf():
 
 @njit(cache=cache)
 def calc_signal_0(
-    signal_output, indicator_output, indicators_output_mtf, mapping_mtf, close
+    _tohlcv,
+    _tohlcv_mtf,
+    mapping_mtf,
+    indicator_output,
+    indicators_output_mtf,
+    signal_output,
 ):
     """
     calc_signal_0是占位的空函数
     """
 
     exist_key = check_all(
-        len(close),
+        _tohlcv,
+        _tohlcv_mtf,
         get_signal_0_keys(),
         get_signal_0_keys_mtf(),
         indicator_output,

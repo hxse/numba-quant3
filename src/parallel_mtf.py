@@ -78,6 +78,8 @@ def run_parallel_mtf(
     tohlcv_mtf,
     indicator_params_list_mtf,
     mapping_mtf,
+    tohlcv_smoothed,
+    tohlcv_mtf_smoothed,
 ):
     """
     并发200配置和4万数据,如果加上njit,缓存,parallel,这个是0.1391 秒,0.1346 秒,0.1246 秒
@@ -87,7 +89,8 @@ def run_parallel_mtf(
         "参数组合数量需要相等"
     )
 
-    close = tohlcv["close"]
+    _tohlcv = tohlcv if len(tohlcv_smoothed) == 0 else tohlcv_smoothed
+    _tohlcv_mtf = tohlcv_mtf if len(tohlcv_mtf_smoothed) == 0 else tohlcv_mtf_smoothed
 
     params_count = len(indicator_params_list)
 
@@ -112,24 +115,24 @@ def run_parallel_mtf(
         performance_output = performance_output_list[_i]
         indicators_output_mtf = indicators_output_list_mtf[_i]
 
-        calc_indicators(indicator_output, close, indicator_params)
+        calc_indicators(_tohlcv, indicator_params, indicator_output)
 
         if len(tohlcv_mtf) > 0:
-            close_mtf = tohlcv_mtf["close"]
-            calc_indicators(indicators_output_mtf, close_mtf, indicator_params_mtf)
+            calc_indicators(_tohlcv_mtf, indicator_params_mtf, indicators_output_mtf)
 
         calc_signal(
-            signal_output,
+            _tohlcv,
+            _tohlcv_mtf,
+            mapping_mtf,
             indicator_output,
             indicators_output_mtf,
-            mapping_mtf,
-            close,
+            signal_output,
             backtest_params,
         )
 
-        calc_backtest(backtest_output, signal_output, close, backtest_params)
+        calc_backtest(tohlcv, backtest_params, signal_output, backtest_output)
 
-        calc_performance(performance_output, backtest_output, close, backtest_params)
+        calc_performance(tohlcv, backtest_params, backtest_output, performance_output)
 
     return (
         indicators_output_list,

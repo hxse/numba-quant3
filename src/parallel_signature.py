@@ -38,6 +38,8 @@ input_signature = (
     tohlcv_np_type,
     params_list_type,
     mapping_dict_type,
+    tohlcv_np_type,
+    tohlcv_np_type,
 )
 
 # 定义返回签名（使用 types.Tuple 表示返回的元组类型）

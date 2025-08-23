@@ -71,7 +71,8 @@ def main(
         params_start_time = time.time()
 
     params_count = 2
-    signal_select_id = SignalId.signal_1_id.value
+    signal_select_id = SignalId.signal_0_id.value
+    smooth_mode = None
     (
         tohlcv_np,
         indicator_params_list,
@@ -79,6 +80,8 @@ def main(
         tohlcv_np_mtf,
         indicator_params_list_mtf,
         mapping_mtf,
+        tohlcv_smoothed,
+        tohlcv_mtf_smoothed,
     ) = init_params(
         params_count,
         signal_select_id,
@@ -86,6 +89,7 @@ def main(
         tohlcv_np,
         tohlcv_np_mtf,
         mapping_mtf,
+        smooth_mode=smooth_mode,
     )
 
     # 记录参数生成结束时间，并计算运行时间
@@ -105,6 +109,8 @@ def main(
         tohlcv_np_mtf,
         indicator_params_list_mtf,
         mapping_mtf,
+        tohlcv_smoothed,
+        tohlcv_mtf_smoothed,
     )
     (
         indicators_output_list,

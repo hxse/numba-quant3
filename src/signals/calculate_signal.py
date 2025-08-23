@@ -69,44 +69,49 @@ signal_dict = {
 
 @njit(cache=cache)
 def calc_signal(
-    signal_output,
+    _tohlcv,
+    _tohlcv_mtf,
+    mapping_mtf,
     indicator_output,
     indicators_output_mtf,
-    mapping_mtf,
-    close,
+    signal_output,
     backtest_params,
 ):
     signal_select = backtest_params["signal_select"]
 
     if signal_select == SignalId.signal_0_id.value:
         calc_signal_0(
-            signal_output,
+            _tohlcv,
+            _tohlcv_mtf,
+            mapping_mtf,
             indicator_output,
             indicators_output_mtf,
-            mapping_mtf,
-            close,
+            signal_output,
         )
     elif signal_select == SignalId.signal_1_id.value:
         calc_signal_1(
-            signal_output,
+            _tohlcv,
+            _tohlcv_mtf,
+            mapping_mtf,
             indicator_output,
             indicators_output_mtf,
-            mapping_mtf,
-            close,
+            signal_output,
         )
     elif signal_select == SignalId.signal_2_id.value:
         calc_signal_2(
-            signal_output,
+            _tohlcv,
+            _tohlcv_mtf,
+            mapping_mtf,
             indicator_output,
             indicators_output_mtf,
-            mapping_mtf,
-            close,
+            signal_output,
         )
     elif signal_select == SignalId.signal_3_id.value:
         calc_signal_3(
-            signal_output,
+            _tohlcv,
+            _tohlcv_mtf,
+            mapping_mtf,
             indicator_output,
             indicators_output_mtf,
-            mapping_mtf,
-            close,
+            signal_output,
         )

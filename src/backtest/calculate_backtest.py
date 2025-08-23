@@ -6,7 +6,7 @@ from numba.typed import Dict, List
 from src.utils.constants import numba_config
 
 
-from src.utils.nb_check_keys import check_keys
+from src.utils.nb_check_keys import check_keys, check_tohlcv_keys
 
 
 cache = numba_config["cache"]
@@ -22,19 +22,24 @@ def get_backtest_keys():
 
 
 @njit(cache=cache)
-def calc_backtest(backtest_output, signal_output, close, backtest_params):
+def calc_backtest(tohlcv, backtest_params, signal_output, backtest_output):
     exist_key = check_keys(get_backtest_keys(), signal_output)
     if not exist_key:
         return
 
-    num_data = len(close)
-    position = np.empty(num_data, dtype=nb_float)
-    price = np.empty(num_data, dtype=nb_float)
-    money = np.empty(num_data, dtype=nb_float)
+    if not check_tohlcv_keys(tohlcv):
+        return
+
+    close = tohlcv["close"]
+    data_count = len(close)
+
+    position = np.empty(data_count, dtype=nb_float)
+    price = np.empty(data_count, dtype=nb_float)
+    money = np.empty(data_count, dtype=nb_float)
     enter_long = signal_output["enter_long"]
     exit_long = signal_output["exit_long"]
 
-    for i in range(len(close)):
+    for i in range(data_count):
         money[i] = close[i]
         if enter_long[i]:
             position[i] = 1

@@ -3,6 +3,9 @@ from numba import njit
 from src.utils.constants import numba_config
 
 
+from src.utils.nb_check_keys import check_tohlcv_keys
+
+
 from .sma import calc_sma
 from .bbands import calc_bbands
 
@@ -11,15 +14,22 @@ nb_float = numba_config["nb"]["float"]
 
 
 @njit(cache=cache)
-def calc_indicators(indicator_output=None, close=None, param=None):
-    if "sma_enable" in param and param["sma_enable"]:
-        indicator_output["sma"] = calc_sma(close, param["sma_period"])
+def calc_indicators(tohlcv, indicator_params, indicator_output):
+    if not check_tohlcv_keys(tohlcv):
+        return
 
-    if "sma2_enable" in param and param["sma2_enable"]:
-        indicator_output["sma2"] = calc_sma(close, param["sma2_period"])
+    if "sma_enable" in indicator_params and indicator_params["sma_enable"]:
+        indicator_output["sma"] = calc_sma(tohlcv, indicator_params["sma_period"])
 
-    if "bbands_enable" in param and param["bbands_enable"]:
-        bbands = calc_bbands(close, param["bbands_period"], param["bbands_std_mult"])
+    if "sma2_enable" in indicator_params and indicator_params["sma2_enable"]:
+        indicator_output["sma2"] = calc_sma(tohlcv, indicator_params["sma2_period"])
+
+    if "bbands_enable" in indicator_params and indicator_params["bbands_enable"]:
+        bbands = calc_bbands(
+            tohlcv,
+            indicator_params["bbands_period"],
+            indicator_params["bbands_std_mult"],
+        )
         indicator_output["bbands_upper"] = bbands[:, 0]
         indicator_output["bbands_middle"] = bbands[:, 1]
         indicator_output["bbands_lower"] = bbands[:, 2]

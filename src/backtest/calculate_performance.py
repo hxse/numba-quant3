@@ -5,7 +5,7 @@ from numba.typed import Dict, List
 from src.utils.constants import numba_config
 
 
-from src.utils.nb_check_keys import check_keys
+from src.utils.nb_check_keys import check_keys, check_tohlcv_keys
 
 
 cache = numba_config["cache"]
@@ -20,9 +20,12 @@ def get_performance_keys():
 
 
 @njit(cache=cache)
-def calc_performance(performance_output, backtest_output, close, backtest_params):
+def calc_performance(tohlcv, backtest_params, backtest_output, performance_output):
     exist_key = check_keys(get_performance_keys(), backtest_output)
     if not exist_key:
+        return
+
+    if not check_tohlcv_keys(tohlcv):
         return
 
     position = backtest_output["position"]

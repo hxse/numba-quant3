@@ -29,10 +29,16 @@ def get_signal_1_keys_mtf():
 
 @njit(cache=cache)
 def calc_signal_1(
-    signal_output, indicator_output, indicators_output_mtf, mapping_mtf, close
+    _tohlcv,
+    _tohlcv_mtf,
+    mapping_mtf,
+    indicator_output,
+    indicators_output_mtf,
+    signal_output,
 ):
     exist_key = check_all(
-        len(close),
+        _tohlcv,
+        _tohlcv_mtf,
         get_signal_1_keys(),
         get_signal_1_keys_mtf(),
         indicator_output,

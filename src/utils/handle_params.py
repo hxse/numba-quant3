@@ -14,6 +14,7 @@ from .nb_params import (
     set_params_list_value,
     get_data_mapping,
     init_tohlcv,
+    init_tohlcv_smoothed,
 )
 
 
@@ -35,6 +36,7 @@ def init_params(
     tohlcv_np,
     tohlcv_np_mtf=None,
     mapping_mtf=None,
+    smooth_mode=None,
 ):
     """
     三个mtf参数: tohlcv_np_mtf, indicator_params_list_mtf, mapping_mtf
@@ -90,6 +92,8 @@ def init_params(
         mapping_mtf = get_data_mapping(tohlcv_np, tohlcv_np_mtf)
 
     tohlcv = init_tohlcv(tohlcv_np)
+    tohlcv_smoothed = init_tohlcv_smoothed(tohlcv_np, smooth_mode=smooth_mode)
+    tohlcv_mtf_smoothed = init_tohlcv_smoothed(tohlcv_np_mtf, smooth_mode=smooth_mode)
 
     result_dict = {
         "tohlcv": tohlcv,
@@ -98,6 +102,8 @@ def init_params(
         "tohlcv_mtf": tohlcv_mtf,
         "indicator_params_list_mtf": indicator_params_list_mtf,
         "mapping_mtf": mapping_mtf,
+        "tohlcv_smoothed": tohlcv_smoothed,
+        "tohlcv_mtf_smoothed": tohlcv_mtf_smoothed,
     }
 
     return (v for k, v in result_dict.items())

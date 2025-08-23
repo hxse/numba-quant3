@@ -71,3 +71,7 @@ get_data_mapping_signature = DictType(unicode_type, nb_int[:])(
 get_init_tohlcv_signature = DictType(unicode_type, nb_float[:])(
     Optional(nb_float[:, :])
 )
+get_init_tohlcv_smoothed_signature = DictType(unicode_type, nb_float[:])(
+    Optional(nb_float[:, :]),
+    Optional(unicode_type),
+)

@@ -7,7 +7,8 @@ nb_float = numba_config["nb"]["float"]
 
 
 @njit(cache=cache)
-def calc_bbands(close, bbands_period, bbands_std_mult):
+def calc_bbands(tohlcv, bbands_period, bbands_std_mult):
+    close = tohlcv["close"]
     num_data = len(close)
     res_bbands = np.empty((num_data, 3), dtype=nb_float)
     res_bbands[:, 0] = close + bbands_period + 1 * bbands_std_mult

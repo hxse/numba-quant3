@@ -17,6 +17,7 @@ from utils.nb_params_signature import (
     convert_params_dict_list_signature,
     get_data_mapping_signature,
     get_init_tohlcv_signature,
+    get_init_tohlcv_smoothed_signature,
 )
 
 
@@ -242,4 +243,36 @@ def init_tohlcv(np_data):
     tohlcv["low"] = np_data[:, 3]
     tohlcv["close"] = np_data[:, 4]
     tohlcv["volume"] = np_data[:, 5]
+    return tohlcv
+
+
+@njit(get_init_tohlcv_smoothed_signature, cache=cache)
+def init_tohlcv_smoothed(np_data, smooth_mode):
+    """
+    允许长度相等的平滑数据如Heikin-Ashi
+    不允许长度不相等的平滑数据如renko
+    """
+    tohlcv = Dict.empty(
+        key_type=types.unicode_type,
+        value_type=nb_float[:],
+    )
+    if np_data is None:
+        return tohlcv
+    assert np_data.shape[1] >= 6, "tohlcv数据列数不足"
+
+    if smooth_mode is None:
+        return tohlcv
+    elif smooth_mode == "":
+        new_np_data = np_data
+    else:
+        raise KeyError(f"not match mode {smooth_mode}")
+
+    assert new_np_data.shape[0] == np_data.shape[0], "只允许长度相等的平滑数据"
+
+    tohlcv["time"] = new_np_data[:, 0]
+    tohlcv["open"] = new_np_data[:, 1]
+    tohlcv["high"] = new_np_data[:, 2]
+    tohlcv["low"] = new_np_data[:, 3]
+    tohlcv["close"] = new_np_data[:, 4]
+    tohlcv["volume"] = new_np_data[:, 5]
     return tohlcv

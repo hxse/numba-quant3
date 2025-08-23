@@ -43,14 +43,33 @@ def check_mapping(signal_keys_mtf, mapping_mtf, data_count):
 
 
 @njit(cache=cache)
+def check_tohlcv_keys(tohlcv):
+    for i in ("time", "open", "high", "low", "close", "volume"):
+        if i not in tohlcv:
+            return False
+    return True
+
+
+@njit(cache=cache)
 def check_all(
-    data_count,
+    _tohlcv,
+    _tohlcv_mtf,
     signal_keys,
     signal_keys_mtf,
     indicator_output,
     indicators_output_mtf,
     mapping_mtf,
 ):
+    if len(signal_keys) > -1:
+        if not check_tohlcv_keys(_tohlcv):
+            return False
+
+    if len(signal_keys_mtf) > 0:
+        if not check_tohlcv_keys(_tohlcv_mtf):
+            return False
+
+    data_count = len(_tohlcv["close"])
+
     exist_key = check_keys(signal_keys, indicator_output)
     if not exist_key:
         return False
