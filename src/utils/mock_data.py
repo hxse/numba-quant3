@@ -10,7 +10,7 @@ np_float = numba_config["np"]["float"]
 
 def get_mock_data(data_count, period="15m"):
     """
-    生成模拟市场数据（OHLCV），使用NumPy矢量化随机游走。
+    生成模拟市场数据（OHLCV），使用几何布朗运动和动态成交量。
 
     参数:
         data_count (int): 要生成的K线数量。
@@ -53,33 +53,46 @@ def get_mock_data(data_count, period="15m"):
         dtype=np_float,
     )
 
-    # 价格随机游走
-    price_steps = (np.random.rand(data_count) - 0.5) * 2
-    prices = 1000 + np.cumsum(price_steps)
+    # 几何布朗运动参数
+    initial_price = 1000.0  # 初始价格
+    mu = 0.0001  # 漂移系数（年化），模拟长期趋势
+    sigma = 0.02  # 波动率（年化），控制价格波动幅度
+    dt = time_step_seconds / (365 * 24 * 60 * 60)  # 时间步长（年化）
+
+    # 生成对数价格路径
+    log_returns = np.random.normal(
+        loc=(mu - 0.5 * sigma**2) * dt, scale=sigma * np.sqrt(dt), size=data_count
+    )
+    log_prices = np.log(initial_price) + np.cumsum(log_returns)
+    prices = np.exp(log_prices)
 
     # 确保价格非负
-    prices[prices <= 0] = 1000.0
+    prices[prices <= 0] = initial_price
 
     # 生成开盘价和收盘价
-    open_prices = np.insert(prices[:-1], 0, 1000.0)
+    open_prices = np.insert(prices[:-1], 0, initial_price)
     close_prices = prices
 
-    # 生成 high 和 low
-    high_prices = (
-        np.maximum(open_prices, close_prices) + np.random.rand(data_count) * 0.5
+    # 生成高低价，波动幅度与周期相关
+    period_scale = np.sqrt(time_step_seconds / (15 * 60))  # 以15分钟为基准缩放波动
+    high_prices = np.maximum(open_prices, close_prices) * (
+        1 + np.random.lognormal(mean=0, sigma=0.01 * period_scale, size=data_count)
     )
-    low_prices = (
-        np.minimum(open_prices, close_prices) - np.random.rand(data_count) * 0.5
+    low_prices = np.minimum(open_prices, close_prices) * (
+        1 - np.random.lognormal(mean=0, sigma=0.01 * period_scale, size=data_count)
     )
 
     # 确保 high >= open, close, low
     high_prices = np.maximum(high_prices, np.maximum(open_prices, close_prices))
-    # 确保 low <= open, close, high
     low_prices = np.minimum(low_prices, np.minimum(open_prices, close_prices))
 
-    # 成交量随机游走，并确保非负
-    volume_steps = (np.random.rand(data_count) - 0.5) * 500
-    volumes = 10000 + np.cumsum(volume_steps)
+    # 生成成交量，与价格波动相关
+    price_changes = np.abs(np.diff(prices, prepend=initial_price)) / prices
+    base_volume = 10000.0
+    volume_volatility = 500.0 * period_scale  # 成交量波动随周期放大
+    volumes = base_volume + volume_volatility * price_changes * np.random.lognormal(
+        mean=0, sigma=0.5, size=data_count
+    )
     volumes[volumes < 100] = 100.0
 
     # 组合成最终的二维数组

@@ -5,7 +5,7 @@ from numba.core import types
 from numba.typed import Dict, List
 
 # 从签名文件导入签名
-from utils.nb_params_signature import (
+from src.utils.nb_params_signature import (
     get_indicator_params_signature,
     get_backtest_params_signature,
     create_params_list_template_signature,

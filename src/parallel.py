@@ -13,7 +13,7 @@ from src.backtest.calculate_backtest import calc_backtest
 from src.backtest.calculate_performance import calc_performance
 
 
-from parallel_signature import signature
+from src.parallel_signature import signature
 
 cache = numba_config["cache"]
 

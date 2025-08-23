@@ -1,6 +1,17 @@
-import numpy as np
+import sys
+from pathlib import Path
 
-from utils.over_constants import numba_config
+root_path = next(
+    (p for p in Path(__file__).resolve().parents if (p / "pyproject.toml").is_file()),
+    None,
+)
+if root_path:
+    sys.path.insert(0, str(root_path))
+
+from Test.utils.over_constants import numba_config
+
+
+import numpy as np
 
 
 from src.utils.nb_params import (
@@ -21,7 +32,7 @@ def test_params_config():
     (
         indicator_params_as_list,
         backtest_params_as_list,
-    ) = create_params_list_template(params_count=2)
+    ) = create_params_list_template(params_count=2, empty=False)
 
     initial_list_as_arr = get_params_list_value("sma_period", indicator_params_as_list)
     assert initial_list_as_arr.shape == (2,)
@@ -37,7 +48,7 @@ def test_params_config():
     (
         indicator_params_as_dict,
         backtest_params_as_dict,
-    ) = create_params_dict_template(params_count=2)
+    ) = create_params_dict_template(params_count=2, empty=False)
 
     # 从字典形式转换为列表形式
     indicator_list_from_dict = convert_params_dict_list(indicator_params_as_dict)
