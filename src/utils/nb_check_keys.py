@@ -60,9 +60,8 @@ def check_all(
     indicators_output_mtf,
     mapping_mtf,
 ):
-    if len(signal_keys) > -1:
-        if not check_tohlcv_keys(_tohlcv):
-            return False
+    if not check_tohlcv_keys(_tohlcv):
+        return False
 
     if len(signal_keys_mtf) > 0:
         if not check_tohlcv_keys(_tohlcv_mtf):
