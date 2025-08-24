@@ -23,13 +23,29 @@ from Test.utils.conftest import np_data_mock, df_data_mock
 
 np_float = numba_config["np"]["float"]
 
+name = "psar"
+input_data_keys = ["high", "low", "close"]
+params_config_list = [
+    {
+        "nb_params": {"af0": 0.02, "af_step": 0.02, "max_af": 0.2},
+        "pd_params": {"af0": 0.02, "af": 0.02, "max_af": 0.2},
+    }
+]
 
-name = "sma"
-params_config_list = [{"nb_params": {"period": 14}, "pd_params": {"length": 14}}]
-input_data_keys = ["close"]
-
-nb_pd_talib_key_maps = None
-pd_talib_key_maps = None
+# 动态构建 output_key_maps
+nb_pd_talib_key_maps = []
+for p in params_config_list:
+    af0 = p["pd_params"]["af0"]
+    max_af = p["pd_params"]["max_af"]
+    nb_pd_talib_key_maps.append(
+        {
+            f"{name}_long": f"PSARl_{af0}_{max_af}",
+            f"{name}_short": f"PSARs_{af0}_{max_af}",
+            f"{name}_af": f"PSARaf_{af0}_{max_af}",
+            f"{name}_reversal": f"PSARr_{af0}_{max_af}",
+        }
+    )
+pd_talib_key_maps = [{v: v for v in d.values()} for d in nb_pd_talib_key_maps]
 assert_func_kwargs = {}
 
 

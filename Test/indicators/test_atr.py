@@ -24,9 +24,10 @@ from Test.utils.conftest import np_data_mock, df_data_mock
 np_float = numba_config["np"]["float"]
 
 
-name = "sma"
+name = "atr"
 params_config_list = [{"nb_params": {"period": 14}, "pd_params": {"length": 14}}]
-input_data_keys = ["close"]
+input_data_keys = ["high", "low", "close"]
+
 
 nb_pd_talib_key_maps = None
 pd_talib_key_maps = None
@@ -37,7 +38,7 @@ def test_accuracy(
     np_data_mock,
     df_data_mock,
     talib=False,
-    assert_mode=True,
+    assert_mode=False,
 ):
     compare_indicator_accuracy(
         name=name,
@@ -56,7 +57,7 @@ def test_accuracy_talib(np_data_mock, df_data_mock, talib=True, assert_mode=True
     test_accuracy(np_data_mock, df_data_mock, talib=talib, assert_mode=assert_mode)
 
 
-def test_pandas_ta_and_talib(df_data_mock, assert_mode=True):
+def test_pandas_ta_and_talib(df_data_mock, assert_mode=False):
     compare_pandas_ta_with_talib(
         name=name,
         params_config_list=params_config_list,

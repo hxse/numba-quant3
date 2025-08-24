@@ -50,6 +50,14 @@ def get_indicator_params(empty):
 
     params["rsi_enable"] = nb_float(0)
     params["rsi_period"] = nb_float(14)
+
+    params["atr_enable"] = nb_float(0)
+    params["atr_period"] = nb_float(14)
+
+    params["psar_enable"] = nb_float(0)
+    params["psar_af0"] = nb_float(0.02)
+    params["psar_af_step"] = nb_float(0.02)
+    params["psar_max_af"] = nb_float(0.2)
     return params
 
 

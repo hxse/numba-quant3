@@ -8,6 +8,7 @@ root_path = next(
 if root_path:
     sys.path.insert(0, str(root_path))
 
+
 from Test.utils.over_constants import numba_config
 
 

@@ -8,27 +8,25 @@ nb_float = numba_config["nb"]["float"]
 
 
 @njit(nb_float[:](nb_float[:], nb_int), cache=cache)
-def nb_rma_optimized(series, length):
+def calc_rma(series, length):
     """
-    一个更接近TA-Lib逻辑的RMA实现。
+    一个更接近TA-Lib逻辑的RMA实现，采用Numba优化后的矢量化方法。
     """
     n = series.size
     result = np.full(n, np.nan, dtype=nb_float)
 
-    # RMA 的第一个有效值需要 length 个数据点
     if n < length:
         return result
 
     # 计算前 length 个数据的平均值作为第一个 RMA 值
-    current_sum = 0.0
-    for i in range(length):
-        current_sum += series[i]
-
-    result[length - 1] = current_sum / length
+    first_rma = np.sum(series[:length]) / length
+    result[length - 1] = first_rma
 
     alpha = 1.0 / length
+
+    # 循环从第一个有效值之后开始
     for i in range(length, n):
-        result[i] = (series[i] - result[i - 1]) * alpha + result[i - 1]
+        result[i] = (series[i] * alpha) + (result[i - 1] * (1 - alpha))
 
     return result
 
@@ -58,8 +56,8 @@ def calc_rsi(close, length=14):
 
     # 计算上涨和下跌的平均值（使用 RMA）
     # nb_rma_optimized函数将处理其自身的NaN
-    avg_ups = nb_rma_optimized(ups_adjusted, length)
-    avg_downs = nb_rma_optimized(downs_adjusted, length)
+    avg_ups = calc_rma(ups_adjusted, length)
+    avg_downs = calc_rma(downs_adjusted, length)
 
     # 计算相对强弱（RS），手动处理除零
     rs = np.full(n - 1, np.nan, dtype=nb_float)
