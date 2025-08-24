@@ -1,10 +1,7 @@
 import numpy as np
-from numba import njit, float64, int64
+from numba import njit
 from src.utils.constants import numba_config
 from src.indicators.sma import calc_sma
-
-
-from sys import float_info as sflt
 
 
 cache = numba_config["cache"]
@@ -13,10 +10,10 @@ nb_float = numba_config["nb"]["float"]
 
 
 # Numba 兼容的 non_zero_range 函数，精确模仿 pandas-ta
-@njit(float64[:](float64[:], float64[:]), cache=True)
+@njit(nb_float[:](nb_float[:], nb_float[:]), cache=True)
 def non_zero_range(high, low):
     diff = high - low
-    epsilon = np.finfo(np.float64).eps  # 约 2.22e-16
+    epsilon = np.finfo(nb_float).eps  # 约 2.22e-16
     has_zero = np.any(diff == 0)
     if has_zero:
         diff = diff + epsilon  # 对整个数组加 epsilon，匹配 pandas-ta
@@ -24,22 +21,22 @@ def non_zero_range(high, low):
 
 
 # Numba 兼容的滚动方差函数（完全矢量化，模仿 pandas-ta 的 variance）
-@njit(float64[:](float64[:], int64, int64), cache=True)
+@njit(nb_float[:](nb_float[:], nb_int, nb_int), cache=True)
 def calc_variance(close, period, ddof):
     num_data = len(close)
     if period <= 1 or num_data < period or ddof >= period:
-        return np.full(num_data, np.nan, dtype=float64)
+        return np.full(num_data, np.nan, dtype=nb_float)
 
     # 初始化输出
-    variance = np.full(num_data, np.nan, dtype=float64)
+    variance = np.full(num_data, np.nan, dtype=nb_float)
 
     # 计算累积和与累积平方和
     cumsum = np.cumsum(close)
     cumsum_sq = np.cumsum(close**2)
 
     # 计算滚动窗口的 sum(x) 和 sum(x^2)
-    rolling_sum = np.empty(num_data, dtype=float64)
-    rolling_sum_sq = np.empty(num_data, dtype=float64)
+    rolling_sum = np.empty(num_data, dtype=nb_float)
+    rolling_sum_sq = np.empty(num_data, dtype=nb_float)
 
     # 前 period-1 个值为 NaN
     rolling_sum[: period - 1] = np.nan

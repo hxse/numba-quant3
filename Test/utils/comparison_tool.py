@@ -66,75 +66,83 @@ def assert_indicator_same(
     array1,
     array2,
     indicator_name,
-    params_str,
+    indicator_info,
     custom_rtol=GLOBAL_RTOL,
     custom_atol=GLOBAL_ATOL,
+    is_nested_call=False,  # 新增参数，用于控制日志输出
 ):
     """
     通用函数，用于比较 array1 和 array2 实现的指标结果。
     """
-    print("\n")
-    # 如果是布尔数组，直接使用 assert_array_equal，并跳过 NaN 检查和 max_diff 计算
+    # 只有在非嵌套调用时才打印开始标记
+    if not is_nested_call:
+        print(f"\n--- 测试开始: {indicator_name} 一致性测试 ---")
+        print(f"    indicator_info: {indicator_info}")
 
     assert len(array1) == len(array2), (
-        f"{indicator_name} length mismatch: array1 has {len(array1)} elements, "
-        f"while array2 has {len(array2)} elements."
+        f"    ❌{indicator_name} length mismatch: array1 {len(array1)} array2 {len(array2)}"
     )
 
     if array1.dtype == bool or array2.dtype == bool:
         np.testing.assert_array_equal(
             array1,
             array2,
-            err_msg=f"{indicator_name} calculation mismatch for {params_str}",
+            err_msg=f"    ❌{indicator_name} calculation mismatch for {indicator_info}",
         )
     else:
         valid_indices = ~np.isnan(array1) & ~np.isnan(array2)
-
         array1_nan_count, array2_nan_count = get_leading_nan_counts_for_two_arrays(
             array1, array2
         )
-        print(
-            f"{indicator_name} ({params_str}) array1_nan_count: {array1_nan_count} (type: {type(array1).__name__}) array2_nan_count: {array2_nan_count} (type: {type(array2).__name__})"
-        )
         assert array1_nan_count == array2_nan_count, (
-            f"{indicator_name} leading NaN count mismatch: array1 has {array1_nan_count}, array2 has {array2_nan_count}"
+            f"    ❌{indicator_name} leading NaN count mismatch: array1 has {array1_nan_count} (type: {type(array1).__name__}), array2 has {array2_nan_count} (type: {type(array2).__name__})"
         )
 
-        # 计算并打印最大差值，只考虑有效索引
         max_diff = (
             np.max(np.abs(array1[valid_indices] - array2[valid_indices]))
             if np.any(valid_indices)
             else 0.0
         )
-        print(f"{indicator_name} ({params_str}) - Max difference: {max_diff:.4e}")
+        print(f"    {indicator_name} Max difference: {max_diff:.4e}")
 
         np.testing.assert_allclose(
             array1[valid_indices],
             array2[valid_indices],
             rtol=custom_rtol,
             atol=custom_atol,
-            err_msg=f"{indicator_name} calculation mismatch for {params_str}",
+            err_msg=f"    ❌{indicator_name} calculation mismatch",
         )
-    print(f"{indicator_name} ({params_str}) accuracy test passed.")
+
+    # 只有在非嵌套调用时才打印结束和通过标记
+    if not is_nested_call:
+        print(f"    ✅ {indicator_name} accuracy test passed.")
+        print(f"--- 测试结束: {indicator_name} 一致性测试 ---")
 
 
-def assert_indicator_different(array1, array2, indicator_name, params_str):
+def assert_indicator_different(array1, array2, indicator_name, indicator_info):
     """
     检测两个指标的结果是否不同。
-    如果 assert_indicator_same 抛出异常（表明结果不同），则表示这个差异性测试通过。
-    如果 assert_indicator_same 成功运行（无异常，表明结果相同），则表示这个差异性测试失败。
     """
-    print(f"\n--- {indicator_name} ({params_str}) - 差异性测试 (期望不同) ---")
+    print(f"\n--- 测试开始: {indicator_name} 差异性测试 ---")
+    print(f"    indicator_info: {indicator_info}")
     try:
-        assert_indicator_same(array1, array2, indicator_name, params_str)
+        # 调用 assert_indicator_same，并传入 is_nested_call=True
+        assert_indicator_same(
+            array1, array2, indicator_name, indicator_info, is_nested_call=True
+        )
+        # 如果没有抛出异常，则说明结果相同，测试失败
         raise AssertionError(
-            f"❌ {indicator_name} ({params_str}) array1 和 array2 被判断为相同，但测试期望是不同，测试失败！"
+            f"    ❌ {indicator_name} array1 和 array2 被判断为相同，但测试期望是不同，测试失败！"
         )
     except AssertionError as e:
-        if f"array1 和 array2 被判断为相同" in str(e):
+        if "被判断为相同" in str(e):
+            # 如果是自定义的失败异常，则重新抛出
             raise e
         else:
+            # 如果是 assert_indicator_same 内部的断言失败，则表示符合期望
             print(
-                f"  ✅ {indicator_name} ({params_str}) array1 和 array2 被判断为不同（符合期望）。"
+                f"    ✅ {indicator_name} array1 和 array2 被判断为不同（符合期望）。"
             )
-            print(f"    详细信息: {e}")  # 打印 assert_indicator_same 报告的差异细节
+            print(f"    详细信息: {e}".replace("    ❌", ""))
+    finally:
+        print(f"--- 测试结束: {indicator_name} 差异性测试 ---")

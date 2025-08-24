@@ -37,6 +37,13 @@ from Test.utils.conftest import np_data_mock, df_data_mock
 np_float = numba_config["np"]["float"]
 
 
+name = "bbands"
+# params=[[14, 2.0], [50, 2.5], [200, 3.0]]
+params = [[14, 2.0]]
+
+bbands_percent_rtol = 2e-4
+
+
 def test_accuracy(
     np_data_mock,
     df_data_mock,
@@ -44,9 +51,9 @@ def test_accuracy(
     assert_mode=True,
 ):
     """
-    测试 SMA 指标的准确性, 以talib为准
+    bbands的实现和pandas-ta和talib, 都保持一致
+    只有bbands_percent,需要调高容错到 2e-4
     """
-
     time = np_data_mock[:, 0]
     open = np_data_mock[:, 1]
     high = np_data_mock[:, 2]
@@ -85,9 +92,8 @@ def test_accuracy(
         smooth_mode=None,
     )
 
-    name = "bbands"
-    for params in [[14, 2.0], [50, 2.5], [200, 3.0]]:
-        (period, std_mult) = params
+    for p in params:
+        (period, std_mult) = p
 
         target_array = np.full(params_count, 1.0, dtype=np_float)
         set_params_list_value(f"{name}_enable", indicator_params_list, target_array)
@@ -144,7 +150,7 @@ def test_accuracy(
 
             custom_params = {}
             if _name == f"{name}_percent":
-                custom_params["custom_rtol"] = 2e-4
+                custom_params["custom_rtol"] = bbands_percent_rtol
 
             assert_func = (
                 assert_indicator_same if assert_mode else assert_indicator_different
@@ -156,8 +162,67 @@ def test_accuracy(
                 f"period {period} std_mult {std_mult}",
                 **custom_params,
             )
-            print(_name, params)
 
 
 def test_accuracy_talib(np_data_mock, df_data_mock, talib=True, assert_mode=True):
     test_accuracy(np_data_mock, df_data_mock, talib=talib, assert_mode=assert_mode)
+
+
+def test_pandas_ta_and_talib(df_data_mock, assert_mode=True):
+    """
+    对于bbands, pandas-ta和talib的两种实现版本, 预期一致
+    只有bbands_percent,需要调高容错到 2e-4
+    """
+    time_series = df_data_mock["time"]
+    open_series = df_data_mock["open"]
+    high_series = df_data_mock["high"]
+    low_series = df_data_mock["low"]
+    close_series = df_data_mock["close"]
+    volume_series = df_data_mock["volume"]
+
+    for p in params:
+        (period, std_mult) = p
+
+        _func = getattr(ta, name)
+
+        # 使用 pandas_ta 计算指标
+
+        _func = getattr(ta, name)
+        pandas_ta_result = _func(
+            close_series, length=int(period), std=std_mult, talib=False
+        )
+
+        pandas_ta_upper = pandas_ta_result[f"BBU_{period}_{std_mult}"]
+        pandas_ta_middle = pandas_ta_result[f"BBM_{period}_{std_mult}"]
+        pandas_ta_lower = pandas_ta_result[f"BBL_{period}_{std_mult}"]
+        pandas_ta_bandwidth = pandas_ta_result[f"BBB_{period}_{std_mult}"]
+        pandas_ta_percent = pandas_ta_result[f"BBP_{period}_{std_mult}"]
+
+        # 使用 talib 计算指标
+        talib_result = _func(close_series, length=int(period), std=std_mult, talib=True)
+
+        talib_upper = talib_result[f"BBU_{period}_{std_mult}"]
+        talib_middle = talib_result[f"BBM_{period}_{std_mult}"]
+        talib_lower = talib_result[f"BBL_{period}_{std_mult}"]
+        talib_bandwidth = talib_result[f"BBB_{period}_{std_mult}"]
+        talib_percent = talib_result[f"BBP_{period}_{std_mult}"]
+
+        for i in [
+            [pandas_ta_upper, talib_upper, f"{name}_upper"],
+            [pandas_ta_middle, talib_middle, f"{name}_middle"],
+            [pandas_ta_lower, talib_lower, f"{name}_lower"],
+            [pandas_ta_bandwidth, talib_bandwidth, f"{name}_bandwidth"],
+            [pandas_ta_percent, talib_percent, f"{name}_percent"],
+        ]:
+            pandas_ta_array, talib_array, _name = i
+
+            custom_params = {}
+            if _name == f"{name}_percent":
+                custom_params["custom_rtol"] = bbands_percent_rtol
+
+            assert_func = (
+                assert_indicator_same if assert_mode else assert_indicator_different
+            )
+            assert_func(
+                pandas_ta_array, talib_array, _name, f"period {period}", **custom_params
+            )

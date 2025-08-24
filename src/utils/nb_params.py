@@ -47,6 +47,9 @@ def get_indicator_params(empty):
     params["bbands_enable"] = nb_float(0)
     params["bbands_period"] = nb_float(14)
     params["bbands_std_mult"] = nb_float(2.0)
+
+    params["rsi_enable"] = nb_float(0)
+    params["rsi_period"] = nb_float(14)
     return params
 
 

@@ -37,7 +37,7 @@ from Test.utils.conftest import np_data_mock, df_data_mock
 np_float = numba_config["np"]["float"]
 
 
-name = "sma"
+name = "rsi"
 # params = [[14], [50], [200]]
 params = [[14]]
 
@@ -46,10 +46,10 @@ def test_accuracy(
     np_data_mock,
     df_data_mock,
     talib=False,
-    assert_mode=True,
+    assert_mode=False,
 ):
     """
-    sma的实现和pandas-ta和talib, 都保持一致
+    rsi的实现和talib保持一致,和pandas-ta不同
     """
     time = np_data_mock[:, 0]
     open = np_data_mock[:, 1]
@@ -139,9 +139,9 @@ def test_accuracy_talib(np_data_mock, df_data_mock, talib=True, assert_mode=True
     test_accuracy(np_data_mock, df_data_mock, talib=talib, assert_mode=assert_mode)
 
 
-def test_pandas_ta_and_talib(df_data_mock, assert_mode=True):
+def test_pandas_ta_and_talib(df_data_mock, assert_mode=False):
     """
-    对于sma, pandas-ta和talib的两种实现版本, 预期一致
+    对于rsi, pandas-ta和talib的两种实现版本, 预期不一致
     """
     time_series = df_data_mock["time"]
     open_series = df_data_mock["open"]

@@ -8,6 +8,7 @@ from src.utils.nb_check_keys import check_tohlcv_keys
 
 from .sma import calc_sma
 from .bbands import calc_bbands
+from .rsi import calc_rsi
 
 cache = numba_config["cache"]
 nb_float = numba_config["nb"]["float"]
@@ -39,3 +40,8 @@ def calc_indicators(tohlcv, indicator_params, indicator_output):
         indicator_output["bbands_lower"] = bbands[:, 2]
         indicator_output["bbands_bandwidth"] = bbands[:, 3]
         indicator_output["bbands_percent"] = bbands[:, 4]
+
+    if "rsi_enable" in indicator_params and indicator_params["rsi_enable"]:
+        indicator_output["rsi"] = calc_rsi(
+            tohlcv["close"], indicator_params["rsi_period"]
+        )

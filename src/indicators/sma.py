@@ -8,7 +8,6 @@ nb_int = numba_config["nb"]["int"]
 nb_float = numba_config["nb"]["float"]
 
 
-# 模仿 pandas-ta 的 nb_sma
 @njit(nb_float[:](nb_float[:], nb_int), cache=cache)
 def calc_sma(close, period):
     num_data = len(close)
