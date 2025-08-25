@@ -5,6 +5,7 @@ from src.utils.constants import numba_config
 
 from src.utils.nb_check_keys import check_tohlcv_keys
 
+from src.parallel_signature import indicators_signature
 
 from .sma import calc_sma
 from .ema import calc_ema
@@ -17,7 +18,7 @@ cache = numba_config["cache"]
 nb_float = numba_config["nb"]["float"]
 
 
-@njit(cache=cache)
+@njit(indicators_signature, cache=cache)
 def calc_indicators(tohlcv, indicator_params, indicator_output):
     if not check_tohlcv_keys(tohlcv):
         return

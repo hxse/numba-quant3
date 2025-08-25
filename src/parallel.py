@@ -13,7 +13,7 @@ from src.backtest.calculate_backtest import calc_backtest
 from src.backtest.calculate_performance import calc_performance
 
 
-from src.parallel_signature import signature
+from src.parallel_signature import parallel_signature
 
 cache = numba_config["cache"]
 
@@ -70,7 +70,7 @@ def init_output_all(params_count):
     )
 
 
-@njit(signature, parallel=True, cache=cache)
+@njit(parallel_signature, parallel=True, cache=cache)
 def run_parallel(
     tohlcv,
     indicator_params_list,

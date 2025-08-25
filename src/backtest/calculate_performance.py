@@ -4,6 +4,7 @@ from numba.core import types
 from numba.typed import Dict, List
 from src.utils.constants import numba_config
 
+from src.parallel_signature import performance_signature
 
 from src.utils.nb_check_keys import check_keys, check_tohlcv_keys
 
@@ -19,7 +20,7 @@ def get_performance_keys():
     return _l
 
 
-@njit(cache=cache)
+@njit(performance_signature, cache=cache)
 def calc_performance(tohlcv, backtest_params, backtest_output, performance_output):
     exist_key = check_keys(get_performance_keys(), backtest_output)
     if not exist_key:

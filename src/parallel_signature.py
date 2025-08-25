@@ -24,11 +24,17 @@ params_list_type = types.ListType(param_dict_type)
 # 定义 mapping 字典类型
 mapping_dict_type = types.DictType(unicode_type, nb_int[:])
 
+indicators_output_type = types.DictType(unicode_type, nb_float[:])
+signal_output_type = types.DictType(unicode_type, nb_bool[:])
+backtest_output_type = types.DictType(unicode_type, nb_float[:])
+performance_output_type = types.DictType(unicode_type, nb_float)
+
 # 定义返回类型的子项
-indicators_list_type = types.ListType(types.DictType(unicode_type, nb_float[:]))
-signals_list_type = types.ListType(types.DictType(unicode_type, nb_bool[:]))
-backtest_list_type = types.ListType(types.DictType(unicode_type, nb_float[:]))
-performance_list_type = types.ListType(types.DictType(unicode_type, nb_float))
+indicators_list_type = types.ListType(indicators_output_type)
+signals_list_type = types.ListType(signal_output_type)
+backtest_list_type = types.ListType(backtest_output_type)
+performance_list_type = types.ListType(performance_output_type)
+
 
 # 定义输入签名（参数类型）
 input_signature = (
@@ -43,7 +49,7 @@ input_signature = (
 )
 
 # 定义返回签名（使用 types.Tuple 表示返回的元组类型）
-return_signature = types.Tuple(
+parallel_return_signature = types.Tuple(
     (
         indicators_list_type,
         signals_list_type,
@@ -54,4 +60,26 @@ return_signature = types.Tuple(
 )
 
 # 正确构建函数签名
-signature = return_signature(*input_signature)
+parallel_signature = parallel_return_signature(*input_signature)
+
+indicators_signature = types.void(
+    tohlcv_np_type, param_dict_type, indicators_output_type
+)
+
+signal_signature = types.void(
+    tohlcv_np_type,
+    tohlcv_np_type,
+    mapping_dict_type,
+    indicators_output_type,
+    indicators_output_type,
+    signal_output_type,
+    param_dict_type,
+)
+
+backtest_signature = types.void(
+    tohlcv_np_type, param_dict_type, signal_output_type, backtest_output_type
+)
+
+performance_signature = types.void(
+    tohlcv_np_type, param_dict_type, backtest_output_type, performance_output_type
+)

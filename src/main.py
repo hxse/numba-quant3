@@ -70,8 +70,8 @@ def main(
     if show_timing:
         params_start_time = time.time()
 
-    params_count = 2
-    signal_select_id = SignalId.signal_2_id.value
+    params_count = 200
+    signal_select_id = SignalId.signal_3_id.value
     smooth_mode = None
     (
         tohlcv_np,

@@ -71,8 +71,29 @@ def get_backtest_params(empty):
     )
     if empty:
         return params
+
     params["signal_select"] = nb_float(0)
-    params["atr_sl_mult"] = nb_float(2.0)
+
+    params["init_money"] = nb_float(10000.0)
+    params["pct_sl"] = nb_float(0.0)
+    params["pct_tp"] = nb_float(0.0)
+    params["pct_tsl"] = nb_float(0.0)
+    params["pct_sl_enable"] = nb_float(0.0)  # 使用 0.0 或 1.0 代表 False/True
+    params["pct_tp_enable"] = nb_float(0.0)
+    params["pct_tsl_enable"] = nb_float(0.0)
+    params["atr_period"] = nb_float(14.0)
+    params["atr_sl_multiplier"] = nb_float(2.0)
+    params["atr_tp_multiplier"] = nb_float(2.0)
+    params["atr_tsl_multiplier"] = nb_float(2.0)
+    params["atr_sl_enable"] = nb_float(0.0)
+    params["atr_tp_enable"] = nb_float(0.0)
+    params["atr_tsl_enable"] = nb_float(0.0)
+    params["psar_enable"] = nb_float(0.0)
+    params["psar_af0"] = nb_float(0.02)
+    params["psar_af_step"] = nb_float(0.02)
+    params["psar_max_af"] = nb_float(0.2)
+    params["close_for_reversal"] = nb_float(0.0)
+
     return params
 
 

@@ -3,6 +3,7 @@ import numba as nb
 from numba import njit
 from enum import IntEnum, auto
 
+from parallel_signature import signal_signature
 
 from .signal_0 import (
     calc_signal_0,
@@ -67,7 +68,7 @@ signal_dict = {
 }
 
 
-@njit(cache=cache)
+@njit(signal_signature, cache=cache)
 def calc_signal(
     _tohlcv,
     _tohlcv_mtf,
