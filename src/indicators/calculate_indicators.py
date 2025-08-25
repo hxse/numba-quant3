@@ -7,6 +7,7 @@ from src.utils.nb_check_keys import check_tohlcv_keys
 
 
 from .sma import calc_sma
+from .ema import calc_ema
 from .bbands import calc_bbands
 from .rsi import calc_rsi
 from .atr import calc_atr
@@ -20,16 +21,16 @@ nb_float = numba_config["nb"]["float"]
 def calc_indicators(tohlcv, indicator_params, indicator_output):
     if not check_tohlcv_keys(tohlcv):
         return
-
-    if "sma_enable" in indicator_params and indicator_params["sma_enable"]:
-        indicator_output["sma"] = calc_sma(
-            tohlcv["close"], indicator_params["sma_period"]
-        )
-
-    if "sma2_enable" in indicator_params and indicator_params["sma2_enable"]:
-        indicator_output["sma2"] = calc_sma(
-            tohlcv["close"], indicator_params["sma2_period"]
-        )
+    for i in ["sma", "sma2"]:
+        if f"{i}_enable" in indicator_params and indicator_params[f"{i}_enable"]:
+            indicator_output[i] = calc_sma(
+                tohlcv["close"], indicator_params[f"{i}_period"]
+            )
+    for i in ["ema", "ema2"]:
+        if f"{i}_enable" in indicator_params and indicator_params[f"{i}_enable"]:
+            indicator_output[i] = calc_ema(
+                tohlcv["close"], indicator_params[f"{i}_period"]
+            )
 
     if "bbands_enable" in indicator_params and indicator_params["bbands_enable"]:
         bbands = calc_bbands(

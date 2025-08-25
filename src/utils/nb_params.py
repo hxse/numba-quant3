@@ -38,11 +38,13 @@ def get_indicator_params(empty):
     )
     if empty:
         return params
-    params["sma_enable"] = nb_float(0)
-    params["sma_period"] = nb_float(14)
+    for i in ["sma", "sma2"]:
+        params[f"{i}_enable"] = nb_float(0)
+        params[f"{i}_period"] = nb_float(14)
 
-    params["sma2_enable"] = nb_float(0)
-    params["sma2_period"] = nb_float(14)
+    for i in ["ema", "ema2"]:
+        params[f"{i}_enable"] = nb_float(0)
+        params[f"{i}_period"] = nb_float(14)
 
     params["bbands_enable"] = nb_float(0)
     params["bbands_period"] = nb_float(14)
