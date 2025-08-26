@@ -29,7 +29,7 @@ def convert_keys(keys):
     return tuple(unique_list)
 
 
-# 年化因子
+# 年化因子, 加密货币
 annualization_factor_dict = {
     # 基于总分钟数计算
     "1m": 365 * 24 * 60 / 1,

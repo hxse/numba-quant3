@@ -56,3 +56,41 @@ def calc_calmar(equity, drawdown, annualization_factor):
         calmar_ratio = np.inf
 
     return calmar_ratio
+
+
+@njit(cache=True)
+def calc_sortino(equity, annualization_factor, min_acceptable_return):
+    if len(equity) < 2 or annualization_factor <= 0:
+        return 0.0
+
+    # 1. 计算每根K线的收益率
+    returns = (equity[1:] - equity[:-1]) / equity[:-1]
+
+    # 2. 筛选出低于最小可接受收益率的“下行”收益
+    downside_returns = returns[returns < min_acceptable_return]
+
+    # 3. 计算下行标准差 (Downside Deviation)
+    if len(downside_returns) > 0:
+        # 下行标准差的计算逻辑
+        downside_deviation = np.sqrt(
+            np.mean((downside_returns - min_acceptable_return) ** 2)
+        )
+    else:
+        # 如果没有下行收益，下行标准差为0
+        downside_deviation = 0.0
+
+    # 4. 计算年化收益率
+    mean_return = np.mean(returns)
+
+    # 5. 计算索提诺比率
+    if downside_deviation > 0:
+        # 年化公式: 索提诺比率 = (年化平均收益 - 年化无风险利率) / 年化下行标准差
+        # 这里为了简化，假设无风险利率为0，所以分子只用年化平均收益
+        sortino_ratio = (mean_return * annualization_factor) / (
+            downside_deviation * np.sqrt(annualization_factor)
+        )
+    else:
+        # 如果没有下行波动，索提诺比率趋向于无穷大
+        sortino_ratio = np.inf if mean_return > 0 else 0.0
+
+    return sortino_ratio

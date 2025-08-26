@@ -6,7 +6,7 @@ from src.utils.constants import numba_config
 
 from src.parallel_signature import performance_signature
 
-from src.backtest.performance_utils import calc_sharpe, calc_calmar
+from src.backtest.performance_utils import calc_sharpe, calc_calmar, calc_sortino
 
 from src.backtest.backtest_enums import (
     PositionStatus as ps,
@@ -18,6 +18,8 @@ from src.backtest.backtest_enums import (
 from src.utils.nb_check_keys import check_keys, check_tohlcv_keys
 
 cache = numba_config["cache"]
+
+nb_float = numba_config["nb"]["float"]
 
 
 @njit(cache=cache)
@@ -127,5 +129,10 @@ def calc_performance(tohlcv, backtest_params, backtest_output, performance_outpu
     calmar_ratio = calc_calmar(equity, drawdown, annualization_factor)
     performance_output["calmar_ratio"] = calmar_ratio
 
+    sortino_ratio = calc_sortino(equity, annualization_factor, nb_float(0.0))
+    performance_output["sortino_ratio"] = sortino_ratio
+
+    total_profit_pct = (equity[-1] / equity[0]) - 1.0
+    performance_output["total_profit_pct"] = total_profit_pct
     performance_output["max_balance"] = np.max(balance)
     performance_output["max_drawdown"] = np.max(drawdown)
