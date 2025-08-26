@@ -32,32 +32,34 @@ def get_signal_3_keys_mtf():
 def calc_signal_3(
     _tohlcv,
     _tohlcv_mtf,
-    mapping_mtf,
+    data_mapping,
     indicator_output,
     indicators_output_mtf,
     signal_output,
 ):
-    exist_key = check_all(
+    if not check_all(
         _tohlcv,
         _tohlcv_mtf,
         get_signal_3_keys(),
         get_signal_3_keys_mtf(),
         indicator_output,
         indicators_output_mtf,
-        mapping_mtf,
-    )
-    if not exist_key:
+        data_mapping,
+    ):
         return
 
-    if exist_key:
-        close = _tohlcv["close"]
-        sma = indicators_output_mtf["sma"][mapping_mtf["mtf"]]
-        sma2 = indicators_output_mtf["sma2"][mapping_mtf["mtf"]]
-        bbands_upper = indicator_output["bbands_upper"]
-        bbands_middle = indicator_output["bbands_middle"]
-        bbands_lower = indicator_output["bbands_lower"]
+    close = _tohlcv["close"]
+    sma = indicators_output_mtf["sma"][data_mapping["mtf"]]
+    sma2 = indicators_output_mtf["sma2"][data_mapping["mtf"]]
+    bbands_upper = indicator_output["bbands_upper"]
+    bbands_middle = indicator_output["bbands_middle"]
+    bbands_lower = indicator_output["bbands_lower"]
 
-        signal_output["enter_long"] = (close < bbands_lower) & (sma > bbands_middle)
-        signal_output["exit_long"] = close > bbands_middle
-        signal_output["enter_short"] = (close > bbands_upper) & (sma < bbands_middle)
-        signal_output["exit_short"] = close < bbands_middle
+    signal_output["enter_long"] = (close < bbands_lower) & (sma > bbands_middle)
+    signal_output["exit_long"] = close > bbands_middle
+    signal_output["enter_short"] = (close > bbands_upper) & (sma < bbands_middle)
+    signal_output["exit_short"] = close < bbands_middle
+
+    skip = data_mapping["skip"]
+    signal_output["enter_long"][skip == 0] = False
+    signal_output["enter_short"][skip == 0] = False

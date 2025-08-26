@@ -30,7 +30,7 @@ def get_signal_0_keys_mtf():
 def calc_signal_0(
     _tohlcv,
     _tohlcv_mtf,
-    mapping_mtf,
+    data_mapping,
     indicator_output,
     indicators_output_mtf,
     signal_output,
@@ -39,14 +39,13 @@ def calc_signal_0(
     calc_signal_0是占位的空函数
     """
 
-    exist_key = check_all(
+    if not check_all(
         _tohlcv,
         _tohlcv_mtf,
         get_signal_0_keys(),
         get_signal_0_keys_mtf(),
         indicator_output,
         indicators_output_mtf,
-        mapping_mtf,
-    )
-    if not exist_key:
+        data_mapping,
+    ):
         return

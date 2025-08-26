@@ -31,21 +31,20 @@ def get_signal_1_keys_mtf():
 def calc_signal_1(
     _tohlcv,
     _tohlcv_mtf,
-    mapping_mtf,
+    data_mapping,
     indicator_output,
     indicators_output_mtf,
     signal_output,
 ):
-    exist_key = check_all(
+    if not check_all(
         _tohlcv,
         _tohlcv_mtf,
         get_signal_1_keys(),
         get_signal_1_keys_mtf(),
         indicator_output,
         indicators_output_mtf,
-        mapping_mtf,
-    )
-    if not exist_key:
+        data_mapping,
+    ):
         return
 
     sma = indicator_output["sma"]
@@ -54,3 +53,7 @@ def calc_signal_1(
     signal_output["exit_long"] = sma < sma2
     signal_output["enter_short"] = sma < sma2
     signal_output["exit_short"] = sma > sma2
+
+    skip = data_mapping["skip"]
+    signal_output["enter_long"][skip == 0] = False
+    signal_output["enter_short"][skip == 0] = False

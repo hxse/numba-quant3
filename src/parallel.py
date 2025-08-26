@@ -77,7 +77,7 @@ def run_parallel(
     backtest_params_list,
     tohlcv_mtf,
     indicator_params_list_mtf,
-    mapping_mtf,
+    data_mapping,
     tohlcv_smoothed,
     tohlcv_mtf_smoothed,
 ):
@@ -123,7 +123,7 @@ def run_parallel(
         calc_signal(
             _tohlcv,
             _tohlcv_mtf,
-            mapping_mtf,
+            data_mapping,
             indicator_output,
             indicators_output_mtf,
             signal_output,

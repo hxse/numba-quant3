@@ -29,6 +29,29 @@ def convert_keys(keys):
     return tuple(unique_list)
 
 
+# 年化因子
+annualization_factor_dict = {
+    # 基于总分钟数计算
+    "1m": 365 * 24 * 60 / 1,
+    "3m": 365 * 24 * 60 / 3,
+    "5m": 365 * 24 * 60 / 5,
+    "10m": 365 * 24 * 60 / 10,
+    "15m": 365 * 24 * 60 / 15,
+    "30m": 365 * 24 * 60 / 30,
+    # 基于总小时数计算
+    "1h": 365 * 24 / 1,
+    "4h": 365 * 24 / 4,
+    "6h": 365 * 24 / 6,
+    "12h": 365 * 24 / 12,
+    # 基于总天数计算
+    "1d": 365 / 1,
+    # 每周
+    "1w": 365 / 7,
+    # 每月
+    "1M": 12,
+}
+
+
 def init_params(
     params_count,
     signal_select_id,
@@ -37,6 +60,7 @@ def init_params(
     tohlcv_np_mtf=None,
     mapping_mtf=None,
     smooth_mode=None,
+    period=None,
 ):
     """
     三个mtf参数: tohlcv_np_mtf, indicator_params_list_mtf, mapping_mtf
@@ -44,6 +68,7 @@ def init_params(
     如果keys_mtf是(""),三个mtf参数都正常,只不过indicator_params_list_mtf不会有任何enable,需要tohlcv_np_mtf数据
     如果keys_mtf是("sma")三个mtf参数都正常,indicator_params_list_mtf中的sma_enable会被打开, 需要tohlcv_np_mtf数据
     """
+
     result = []
     for keys in ["keys", "keys_mtf"]:
         signal_keys = signal_dict[signal_select_id][keys]
@@ -74,6 +99,17 @@ def init_params(
                 "indicator_params_list": indicator_params_list,
                 "backtest_params_list": backtest_params_list,
             }
+        )
+
+    # 更新年化因子
+    if period:
+        set_params_list_value(
+            "annualization_factor",
+            result[0]["backtest_params_list"],
+            np.array(
+                [annualization_factor_dict[period] for i in range(params_count)],
+                dtype=np_float,
+            ),
         )
 
     assert tohlcv_np is not None, "小周期数据不能为none"

@@ -56,6 +56,7 @@ def compare_indicator_accuracy(
         tohlcv_np_mtf=None,
         mapping_mtf=None,
         smooth_mode=None,
+        period=None,
     )
 
     # 统一处理单列和多列的情况

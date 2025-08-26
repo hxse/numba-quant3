@@ -75,6 +75,7 @@ def get_backtest_params(empty):
     params["signal_select"] = nb_float(0)
 
     params["init_money"] = nb_float(10000.0)
+    params["close_for_reversal"] = nb_float(1.0)
     params["pct_sl"] = nb_float(0.0)
     params["pct_tp"] = nb_float(0.0)
     params["pct_tsl"] = nb_float(0.0)
@@ -92,7 +93,12 @@ def get_backtest_params(empty):
     params["psar_af0"] = nb_float(0.02)
     params["psar_af_step"] = nb_float(0.02)
     params["psar_max_af"] = nb_float(0.2)
-    params["close_for_reversal"] = nb_float(0.0)
+    params["commission_pct"] = nb_float(0.0)
+    params["commission_fixed"] = nb_float(0.0)
+    params["slippage_atr"] = nb_float(0.0)
+    params["slippage_pct"] = nb_float(0.0)
+    params["position_size"] = nb_float(1.0)
+    params["annualization_factor"] = nb_float(0.0)
 
     return params
 
@@ -259,6 +265,7 @@ def get_data_mapping(tohlcv_np, tohlcv_np_mtf):
     mapping_indices = np.searchsorted(mtf_times, times, side="right") - 1
 
     _d["mtf"] = mapping_indices.astype(nb_int)
+    _d["skip"] = np.ones(len(times), dtype=nb_int)  # 1 是不跳过，0 是跳过，默认值为1
     return _d
 
 

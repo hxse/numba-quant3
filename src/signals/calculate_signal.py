@@ -72,7 +72,7 @@ signal_dict = {
 def calc_signal(
     _tohlcv,
     _tohlcv_mtf,
-    mapping_mtf,
+    data_mapping,
     indicator_output,
     indicators_output_mtf,
     signal_output,
@@ -84,7 +84,7 @@ def calc_signal(
         calc_signal_0(
             _tohlcv,
             _tohlcv_mtf,
-            mapping_mtf,
+            data_mapping,
             indicator_output,
             indicators_output_mtf,
             signal_output,
@@ -93,7 +93,7 @@ def calc_signal(
         calc_signal_1(
             _tohlcv,
             _tohlcv_mtf,
-            mapping_mtf,
+            data_mapping,
             indicator_output,
             indicators_output_mtf,
             signal_output,
@@ -102,7 +102,7 @@ def calc_signal(
         calc_signal_2(
             _tohlcv,
             _tohlcv_mtf,
-            mapping_mtf,
+            data_mapping,
             indicator_output,
             indicators_output_mtf,
             signal_output,
@@ -111,7 +111,7 @@ def calc_signal(
         calc_signal_3(
             _tohlcv,
             _tohlcv_mtf,
-            mapping_mtf,
+            data_mapping,
             indicator_output,
             indicators_output_mtf,
             signal_output,

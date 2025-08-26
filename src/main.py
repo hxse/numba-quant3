@@ -60,8 +60,10 @@ def main(
         data_start_time = time.time()
         data_count = 40000
         data_count_mtf = 10000
-        tohlcv_np = get_mock_data(data_count=data_count, period="15m")
-        tohlcv_np_mtf = get_mock_data(data_count=data_count_mtf, period="4h")
+        period = "15m"
+        period_mtf = "4h"
+        tohlcv_np = get_mock_data(data_count=data_count, period=period)
+        tohlcv_np_mtf = get_mock_data(data_count=data_count_mtf, period=period_mtf)
         mapping_mtf = np.zeros(tohlcv_np.shape[0], dtype=np_float)
         data_end_time = time.time()
         data_duration = data_end_time - data_start_time
@@ -87,9 +89,10 @@ def main(
         signal_select_id,
         signal_dict,
         tohlcv_np,
-        tohlcv_np_mtf,
-        mapping_mtf,
+        tohlcv_np_mtf=tohlcv_np_mtf,
+        mapping_mtf=mapping_mtf,
         smooth_mode=smooth_mode,
+        period=period,
     )
 
     # 记录参数生成结束时间，并计算运行时间

@@ -29,14 +29,23 @@ def check_keys(keys, dict_):
 
 
 @njit(cache=cache)
-def check_mapping(signal_keys_mtf, mapping_mtf, data_count):
-    if len(signal_keys_mtf) > 0:
-        if "mtf" not in mapping_mtf:
+def check_mapping(signal_keys_mtf, data_mapping, data_count):
+    # 使用一个静态元组来存储需要检查的键
+    # 元组在 Numba 中是类型确定的，可以安全地遍历
+    for key in ("mtf", "skip"):
+        # 处理 mtf 的特殊条件：如果 signal_keys_mtf 长度为0，则跳过对 mtf 的检查
+        if key == "mtf" and len(signal_keys_mtf) == 0:
+            continue
+
+        # 对当前的 key 执行通用的检查
+        if key not in data_mapping:
             return False
-        m_mtf = mapping_mtf["mtf"]
-        if len(m_mtf) == 0:
+
+        _item = data_mapping[key]
+        if len(_item) == 0:
             return False
-        if len(m_mtf) != data_count:
+
+        if len(_item) != data_count:
             return False
 
     return True
@@ -58,7 +67,7 @@ def check_all(
     signal_keys_mtf,
     indicator_output,
     indicators_output_mtf,
-    mapping_mtf,
+    data_mapping,
 ):
     if not check_tohlcv_keys(_tohlcv):
         return False
@@ -77,7 +86,7 @@ def check_all(
     if not exist_key:
         return False
 
-    exist_mapping = check_mapping(signal_keys_mtf, mapping_mtf, data_count)
+    exist_mapping = check_mapping(signal_keys_mtf, data_mapping, data_count)
     if not exist_mapping:
         return False
 
