@@ -4,6 +4,7 @@ from numba import njit
 from numba.core import types
 from numba.typed import Dict, List
 
+
 # 从签名文件导入签名
 from src.utils.nb_params_signature import (
     get_indicator_params_signature,
@@ -15,6 +16,7 @@ from src.utils.nb_params_signature import (
     get_params_dict_value_signature,
     set_params_dict_value_signature,
     convert_params_dict_list_signature,
+    convert_params_list_dict_signature,
     get_data_mapping_signature,
     get_init_tohlcv_signature,
     get_init_tohlcv_smoothed_signature,
@@ -210,26 +212,20 @@ def convert_params_dict_list(params_dict):
         first_key = k
         break
 
-    # 检查字典是否为空
-    if not first_key:
-        return List.empty_list(
-            Dict.empty(
-                key_type=types.unicode_type,
-                value_type=nb_float,
-            )
-        )
-
-    params_count = len(params_dict[first_key])
-
-    for i in params_dict.keys():
-        assert params_count == len(params_dict[i]), "参数数量要彼此一致"
-
     params_list = List.empty_list(
         Dict.empty(
             key_type=types.unicode_type,
             value_type=nb_float,
         )
     )
+    # 检查字典是否为空
+    if not first_key:
+        return params_list
+
+    params_count = len(params_dict[first_key])
+
+    for i in params_dict.keys():
+        assert params_count == len(params_dict[i]), "参数数量要彼此一致"
 
     for i in range(params_count):
         params = Dict.empty(
@@ -241,6 +237,44 @@ def convert_params_dict_list(params_dict):
         params_list.append(params)
 
     return params_list
+
+
+@njit(convert_params_list_dict_signature, cache=True)
+def convert_params_list_dict(params_list):
+    """
+    将一个参数列表转换为参数字典。
+    参数列表: [
+      {'key1': value1, 'key2': value2},
+      {'key1': value3, 'key2': value4},
+    ]
+    参数字典: {
+      'key1': [value1, value3],
+      'key2': [value2, value4],
+    }
+    """
+    params_dict = Dict.empty(key_type=types.unicode_type, value_type=nb_float[:])
+
+    if len(params_list) == 0:
+        # 返回一个空的字典
+        return params_dict
+
+    # 获取所有键
+    first_dict = params_list[0]
+    keys = List.empty_list(types.unicode_type)
+    for k in first_dict.keys():
+        keys.append(k)
+
+    # 初始化输出字典，并预分配数组空间
+    list_length = len(params_list)
+
+    for key in keys:
+        # Numba 不支持直接从列表中创建 NumPy 数组，需要手动填充
+        array = np.empty(list_length, dtype=nb_float)
+        for i in range(list_length):
+            array[i] = params_list[i][key]
+        params_dict[key] = array
+
+    return params_dict
 
 
 @njit(get_data_mapping_signature, cache=cache)

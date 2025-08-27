@@ -1,4 +1,6 @@
 database/
+output/
+.pytest_cache/
 
 # Python-generated files
 __pycache__/

@@ -46,6 +46,7 @@ def main(
     # 在解析参数并更新全局配置字典后，再导入 Numba 函数
     from utils.handle_params import init_params
     from utils.mock_data import get_mock_data
+    from utils.convert_output import convert_output
 
     from parallel import run_parallel
     from signals.calculate_signal import SignalId, signal_dict
@@ -105,7 +106,7 @@ def main(
     if show_timing:
         parallel_start_time = time.time()
 
-    result = run_parallel(
+    result_list = run_parallel(
         tohlcv_np,
         indicator_params_list,
         backtest_params_list,
@@ -121,7 +122,7 @@ def main(
         backtest_output_list,
         performance_output_list,
         indicators_output_list_mtf,
-    ) = result
+    ) = result_list
 
     # 记录 run_parallel 函数结束时间并打印内核运行时间
     if show_timing:
@@ -130,6 +131,18 @@ def main(
         print(f"run_parallel 内核运行时间: {parallel_duration:.4f} 秒")
 
     print(f"Numba 函数结果: {len(indicators_output_list)}")
+
+    if show_timing:
+        convert_start_time = time.time()
+
+    result_dataframe, performance_result = convert_output(result_list, csv_path="")
+
+    if show_timing:
+        convert_end_time = time.time()
+        convert_duration = convert_end_time - convert_start_time
+        print(
+            f"convert_output 转换np数组和dataframe 总运行时间: {convert_duration:.4f} 秒"
+        )
 
     import pdb
 

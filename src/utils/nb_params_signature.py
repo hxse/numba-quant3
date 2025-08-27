@@ -61,6 +61,7 @@ set_params_dict_value_signature = types.void(
 
 
 convert_params_dict_list_signature = params_list_type(params_dict_type)
+convert_params_list_dict_signature = params_dict_type(params_list_type)
 
 
 get_data_mapping_signature = DictType(unicode_type, nb_int[:])(
