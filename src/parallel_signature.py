@@ -46,6 +46,7 @@ input_signature = (
     mapping_dict_type,
     tohlcv_np_type,
     tohlcv_np_type,
+    nb_bool,
 )
 
 # 定义返回签名（使用 types.Tuple 表示返回的元组类型）

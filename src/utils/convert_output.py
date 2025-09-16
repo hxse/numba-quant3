@@ -4,56 +4,33 @@ from src.utils.nb_convert_output import jitted_convert_all_dicts
 import time
 
 
-def convert_output(result, num=0, csv_path="output"):
-    Path(csv_path).mkdir(parents=True, exist_ok=True)
+def convert_output(params, result, num=0, output_path="output"):
+    Path(output_path).mkdir(parents=True, exist_ok=True)
 
-    (
-        indicators_output_list,
-        signals_output_list,
-        backtest_output_list,
-        performance_output_list,
-        indicators_output_list_mtf,
-    ) = result
+    params_tuple = tuple(params)
+    result_tuple = tuple(result)
 
-    (
-        (indicators_keys, signals_keys, backtest_keys, indicators_keys_mtf),
-        (indicators_dict, signals_dict, backtest_dict, indicators_dict_mtf),
-        (
-            indicators_np,
-            signals_np,
-            backtest_np,
-            indicators_np_mtf,
-        ),
-        performance_keys,
-        performance_dict,
-        performance_value,
-    ) = jitted_convert_all_dicts(
-        indicators_output_list,
-        signals_output_list,
-        backtest_output_list,
-        performance_output_list,
-        indicators_output_list_mtf,
-        num=num,
-    )
+    result_converted = jitted_convert_all_dicts(params_tuple, result_tuple, num)
 
-    result_dataframe = {}
-    for name, keys_item, dict_item, np_item in [
-        ["indicators", indicators_keys, indicators_dict, indicators_np],
-        ["signals", signals_keys, signals_dict, signals_np],
-        ["backtest", backtest_keys, backtest_dict, backtest_np],
-        ["indicators_mtf", indicators_keys_mtf, indicators_dict_mtf, indicators_np_mtf],
-    ]:
-        keys = tuple(keys_item)  # 转换List才是最快的, 如果直接转换Dict会慢
-        df = pd.DataFrame(np_item, columns=keys)
-        output_path = f"{csv_path}/{name}.csv"
-        if csv_path:
-            df.to_csv(output_path, index=False)
+    final_result = {}
+    for name, keys_item, dict_item, np_item in result_converted:
+        # 用List转换成tuple才是最快的, 如果用Dict转换成tuple会慢
+        keys = tuple(keys_item)
 
-        result_dataframe[name] = df
+        if len(np_item.shape) == 1:
+            final_result[name] = {}
+            for i, k in enumerate(keys):
+                final_result[name][k] = float(np_item[i])
+        elif len(np_item.shape) == 2:
+            df = pd.DataFrame(np_item, columns=keys)
+            final_result[name] = df
+        else:
+            raise RuntimeError(f"检测到未预期维度数 {len(np_item).shape}")
 
-    performance_result = {}
-    keys = tuple(performance_keys)
-    for i, k in enumerate(keys):
-        performance_result[k] = float(performance_value[i])
+        # _output_path = f"{output_path}/{name}.csv"
+        # _output_path = f"{output_path}/{name}.parquet"
+        # if _output_path:
+        #     # df.to_csv(_output_path, index=False)
+        #     df.to_parquet(_output_path, index=False)
 
-    return result_dataframe, performance_result
+    return final_result

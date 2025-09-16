@@ -1,6 +1,6 @@
 import time
 
-base_start_time = time.time()
+base_start_time = time.perf_counter()
 
 import sys
 from pathlib import Path
@@ -16,23 +16,41 @@ import numpy as np
 from src.utils.typer_tool import typer, app
 from src.utils.constants import numba_config, set_numba_dtypes
 
-
-base_end_time = time.time()
-base_duration = base_end_time - base_start_time
-print(f"基本模块导入时间(进入main之前的时间): {base_duration:.4f} 秒")
+from memory_profiler import profile
 
 
 def main(
     cache: bool = typer.Option(True, "--cache/--no-cache", help="启用或禁用Numba缓存"),
     enable64: bool = typer.Option(True, "--64bit/--32bit", help="启用或禁用64位浮点数"),
-    show_timing: bool = typer.Option(True, "--timing", help="启用或禁用运行时间打印。"),
+    show_timing: bool = typer.Option(
+        True, "--timing/--no-timing", help="启用或禁用运行时间打印。"
+    ),
+    enable_profile: bool = typer.Option(
+        False, "--profile/--no-profile", help="启用或禁用内存分析器profile装饰器"
+    ),
+    enable_warmup: bool = typer.Option(
+        False, "--warmup/--no-warmup", help="启用或禁用提前预运行一次"
+    ),
 ):
     """
     执行整个回测流程并可选地打印运行时间。
     """
-    # 记录整个main函数开始时间
+    params = (cache, enable64, show_timing, enable_warmup)
+    if enable_profile:
+        _func = profile(run_main_logic)
+        _func(*params)
+    else:
+        run_main_logic(*params)
+
+
+def run_main_logic(cache, enable64, show_timing, enable_warmup):
     if show_timing:
-        main_start_time = time.time()
+        base_end_time = time.perf_counter()
+        base_duration = base_end_time - base_start_time
+        print(f"基本模块导入时间: {base_duration:.4f} 秒")
+
+    if show_timing:
+        main_start_time = time.perf_counter()
 
     # 更新全局配置字典
     set_numba_dtypes(numba_config, enable64=enable64, cache=cache)
@@ -51,107 +69,101 @@ def main(
     from parallel import run_parallel
     from signals.calculate_signal import SignalId, signal_dict
 
-    # 记录参数生成开始时间，并计算冷启动时间
     if show_timing:
-        main_end_time = time.time()
-        cold_duration = main_end_time - main_start_time
-        print(f"冷启动时间 (进入main到参数生成前): {cold_duration:.4f} 秒")
+        cold_duration = time.perf_counter() - main_start_time
+        print(f"numba模块导入时间: {cold_duration:.4f} 秒")
 
     if show_timing:
-        data_start_time = time.time()
-        data_count = 40000
-        data_count_mtf = 10000
-        period = "15m"
-        period_mtf = "4h"
-        tohlcv_np = get_mock_data(data_count=data_count, period=period)
-        tohlcv_np_mtf = get_mock_data(data_count=data_count_mtf, period=period_mtf)
-        mapping_mtf = np.zeros(tohlcv_np.shape[0], dtype=np_float)
-        data_end_time = time.time()
+        data_start_time = time.perf_counter()
+
+    data_count = 40000
+    data_count_mtf = 10000
+    period = "15m"
+    period_mtf = "4h"
+    tohlcv_np = get_mock_data(data_count=data_count, period=period)
+    tohlcv_np_mtf = get_mock_data(data_count=data_count_mtf, period=period_mtf)
+    mapping_mtf = np.zeros(tohlcv_np.shape[0], dtype=np_float)
+
+    if show_timing:
+        data_end_time = time.perf_counter()
         data_duration = data_end_time - data_start_time
-        print(f"数据导入时间 (进入main到参数生成前): {data_duration:.4f} 秒")
+        print(f"数据导入时间: {data_duration:.4f} 秒")
 
-    if show_timing:
-        params_start_time = time.time()
+    for i in range(2):
+        if show_timing:
+            params_start_time = time.perf_counter()
 
-    params_count = 200
-    signal_select_id = SignalId.signal_3_id.value
-    smooth_mode = None
-    (
-        tohlcv_np,
-        indicator_params_list,
-        backtest_params_list,
-        tohlcv_np_mtf,
-        indicator_params_list_mtf,
-        mapping_mtf,
-        tohlcv_smoothed,
-        tohlcv_mtf_smoothed,
-    ) = init_params(
-        params_count,
-        signal_select_id,
-        signal_dict,
-        tohlcv_np,
-        tohlcv_np_mtf=tohlcv_np_mtf,
-        mapping_mtf=mapping_mtf,
-        smooth_mode=smooth_mode,
-        period=period,
-    )
+        if i == 0 and not enable_warmup:
+            continue
 
-    # 记录参数生成结束时间，并计算运行时间
-    if show_timing:
-        params_end_time = time.time()
-        params_duration = params_end_time - params_start_time
-        print(f"参数生成时间 (default_params): {params_duration:.4f} 秒")
+        params_count = 1 if i == 0 else 1
+        signal_select_id = SignalId.signal_3_id.value
+        smooth_mode = None
+        is_only_performance = False if params_count == 1 else True
+        print("k线数量", len(tohlcv_np), "并发数量", params_count)
 
-    # 记录 parallel_entry 函数开始时间
-    if show_timing:
-        parallel_start_time = time.time()
-
-    result_list = run_parallel(
-        tohlcv_np,
-        indicator_params_list,
-        backtest_params_list,
-        tohlcv_np_mtf,
-        indicator_params_list_mtf,
-        mapping_mtf,
-        tohlcv_smoothed,
-        tohlcv_mtf_smoothed,
-    )
-    (
-        indicators_output_list,
-        signals_output_list,
-        backtest_output_list,
-        performance_output_list,
-        indicators_output_list_mtf,
-    ) = result_list
-
-    # 记录 run_parallel 函数结束时间并打印内核运行时间
-    if show_timing:
-        parallel_end_time = time.time()
-        parallel_duration = parallel_end_time - parallel_start_time
-        print(f"run_parallel 内核运行时间: {parallel_duration:.4f} 秒")
-
-    print(f"Numba 函数结果: {len(indicators_output_list)}")
-
-    if show_timing:
-        convert_start_time = time.time()
-
-    result_dataframe, performance_result = convert_output(result_list, csv_path="")
-
-    if show_timing:
-        convert_end_time = time.time()
-        convert_duration = convert_end_time - convert_start_time
-        print(
-            f"convert_output 转换np数组和dataframe 总运行时间: {convert_duration:.4f} 秒"
+        params_tuple = init_params(
+            params_count,
+            signal_select_id,
+            signal_dict,
+            tohlcv_np,
+            tohlcv_np_mtf=tohlcv_np_mtf,
+            mapping_mtf=mapping_mtf,
+            smooth_mode=smooth_mode,
+            period=period,
+            is_only_performance=is_only_performance,
         )
+        (
+            tohlcv,
+            indicator_params_list,
+            backtest_params_list,
+            tohlcv_mtf,
+            indicator_params_list_mtf,
+            mapping_mtf,
+            tohlcv_smoothed,
+            tohlcv_mtf_smoothed,
+            is_only_performance,
+        ) = params_tuple
 
-    import pdb
+        if show_timing:
+            params_end_time = time.perf_counter()
+            params_duration = params_end_time - params_start_time
+            print(f"参数生成时间 (default_params): {params_duration:.4f} 秒")
 
-    pdb.set_trace()
+        if show_timing:
+            parallel_start_time = time.perf_counter()
+
+        result_tuple = run_parallel(*params_tuple)
+        (
+            indicators_output_list,
+            signals_output_list,
+            backtest_output_list,
+            performance_output_list,
+            indicators_output_list_mtf,
+        ) = result_tuple
+
+        if show_timing:
+            parallel_end_time = time.perf_counter()
+            parallel_duration = parallel_end_time - parallel_start_time
+            print(f"run_parallel 内核运行时间: {parallel_duration:.4f} 秒")
+
+    if show_timing:
+        convert_start_time = time.perf_counter()
+
+    num = 0
+    final_result = convert_output(
+        params_tuple, result_tuple, num=num, output_path="output/test"
+    )
+    print(f"num {num} final_result {final_result['performance']['total_profit_pct']}")
+
+    if show_timing:
+        convert_end_time = time.perf_counter()
+        convert_duration = convert_end_time - convert_start_time
+        print(f"转换输出总运行时间: {convert_duration:.4f} 秒")
 
     # 记录整个main函数结束时间并打印总运行时间
     if show_timing:
-        main_end_time = time.time()
-        main_duration = main_end_time - main_start_time
+        main_duration = time.perf_counter() - main_start_time
         print(f"main 函数总运行时间: {main_duration:.4f} 秒")
 
 

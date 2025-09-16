@@ -1,6 +1,9 @@
 import numpy as np
 import numba as nb
 
+# from numba import set_num_threads
+# set_num_threads(8)
+
 
 numba_config = {}
 

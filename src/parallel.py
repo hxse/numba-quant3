@@ -25,7 +25,7 @@ print("parallel_entry cache", cache)
 
 
 @njit(cache=cache)
-def init_output_all(params_count):
+def init_output_all(params_count, enable_fill):
     # 使用显式类型创建 Typed List
     indicators_output_list = List.empty_list(
         Dict.empty(key_type=types.unicode_type, value_type=nb_float[:])
@@ -43,30 +43,58 @@ def init_output_all(params_count):
         Dict.empty(key_type=types.unicode_type, value_type=nb_float[:])
     )
 
-    # 预填充列表
-    for _ in range(params_count):
-        # 填充一个空的字典
-        indicators_output_list.append(
-            Dict.empty(key_type=types.unicode_type, value_type=nb_float[:])
-        )
-        signals_output_list.append(
-            Dict.empty(key_type=types.unicode_type, value_type=nb_bool[:])
-        )
-        backtest_output_list.append(
-            Dict.empty(key_type=types.unicode_type, value_type=nb_float[:])
-        )
-        performance_output_list.append(
-            Dict.empty(key_type=types.unicode_type, value_type=nb_float)
-        )
-        indicators_output_list_mtf.append(
-            Dict.empty(key_type=types.unicode_type, value_type=nb_float[:])
-        )
+    if enable_fill:
+        # 预填充列表
+        for _ in range(params_count):
+            # 填充一个空的字典
+            indicators_output_list.append(
+                Dict.empty(key_type=types.unicode_type, value_type=nb_float[:])
+            )
+            signals_output_list.append(
+                Dict.empty(key_type=types.unicode_type, value_type=nb_bool[:])
+            )
+            backtest_output_list.append(
+                Dict.empty(key_type=types.unicode_type, value_type=nb_float[:])
+            )
+            performance_output_list.append(
+                Dict.empty(key_type=types.unicode_type, value_type=nb_float)
+            )
+            indicators_output_list_mtf.append(
+                Dict.empty(key_type=types.unicode_type, value_type=nb_float[:])
+            )
     return (
         indicators_output_list,
         signals_output_list,
         backtest_output_list,
         performance_output_list,
         indicators_output_list_mtf,
+    )
+
+
+# 这是一个用于清空单个回测结果字典的工具函数。
+@njit(cache=cache)
+def clear_list_element_at_index(
+    i,
+    indicators_output_list,
+    signals_output_list,
+    backtest_output_list,
+    indicators_output_list_mtf,
+):
+    """
+    根据索引i，清空指定列表中对应位置的字典，
+    用一个新的空字典替换。
+    """
+    indicators_output_list[i] = Dict.empty(
+        key_type=types.unicode_type, value_type=types.float64[:]
+    )
+    signals_output_list[i] = Dict.empty(
+        key_type=types.unicode_type, value_type=types.boolean[:]
+    )
+    backtest_output_list[i] = Dict.empty(
+        key_type=types.unicode_type, value_type=types.float64[:]
+    )
+    indicators_output_list_mtf[i] = Dict.empty(
+        key_type=types.unicode_type, value_type=types.float64[:]
     )
 
 
@@ -80,6 +108,7 @@ def run_parallel(
     data_mapping,
     tohlcv_smoothed,
     tohlcv_mtf_smoothed,
+    is_only_performance,
 ):
     """
     并发200配置和4万数据,如果加上njit,缓存,parallel,这个是0.1391 秒,0.1346 秒,0.1246 秒
@@ -100,7 +129,7 @@ def run_parallel(
         backtest_output_list,
         performance_output_list,
         indicators_output_list_mtf,
-    ) = init_output_all(params_count)
+    ) = init_output_all(params_count, True)
 
     for i in prange(params_count):
         _i = nb_int(i)
@@ -133,6 +162,23 @@ def run_parallel(
         calc_backtest(tohlcv, backtest_params, signal_output, backtest_output)
 
         calc_performance(tohlcv, backtest_params, backtest_output, performance_output)
+
+        if is_only_performance:
+            clear_list_element_at_index(
+                _i,
+                indicators_output_list,
+                signals_output_list,
+                backtest_output_list,
+                indicators_output_list_mtf,
+            )
+    if is_only_performance:
+        (
+            indicators_output_list,
+            signals_output_list,
+            backtest_output_list,
+            _,
+            indicators_output_list_mtf,
+        ) = init_output_all(params_count, False)
 
     return (
         indicators_output_list,

@@ -61,6 +61,7 @@ def init_params(
     mapping_mtf=None,
     smooth_mode=None,
     period=None,
+    is_only_performance=False,
 ):
     """
     三个mtf参数: tohlcv_np_mtf, indicator_params_list_mtf, mapping_mtf
@@ -140,6 +141,7 @@ def init_params(
         "mapping_mtf": mapping_mtf,
         "tohlcv_smoothed": tohlcv_smoothed,
         "tohlcv_mtf_smoothed": tohlcv_mtf_smoothed,
+        "is_only_performance": is_only_performance,
     }
 
-    return (v for k, v in result_dict.items())
+    return tuple(result_dict.values())
