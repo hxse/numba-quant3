@@ -1,5 +1,4 @@
-database/
-output/
+data/
 .pytest_cache/
 
 # Python-generated files

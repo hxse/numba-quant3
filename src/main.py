@@ -76,6 +76,7 @@ def run_main_logic(cache, enable64, show_timing, enable_warmup):
     if show_timing:
         data_start_time = time.perf_counter()
 
+    symbol = "mock"
     data_count = 40000
     data_count_mtf = 10000
     period = "15m"
@@ -151,8 +152,18 @@ def run_main_logic(cache, enable64, show_timing, enable_warmup):
         convert_start_time = time.perf_counter()
 
     num = 0
+
+    token_path = Path("./data/config.json")
+    output_path = f"{token_path.parent}/output/{symbol}/{signal_select_id}"
     final_result = convert_output(
-        params_tuple, result_tuple, num=num, output_path="output/test"
+        params_tuple,
+        result_tuple,
+        num=num,
+        data_suffix=".csv",
+        # save_local_dir=output_path,
+        save_zip_dir=output_path,
+        upload_server="http://127.0.0.1:5123/file/upload",
+        token_path=token_path,
     )
     print(f"num {num} final_result {final_result['performance']['total_profit_pct']}")
 
