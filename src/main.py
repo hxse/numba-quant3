@@ -64,7 +64,7 @@ def run_main_logic(cache, enable64, show_timing, enable_warmup):
     # 在解析参数并更新全局配置字典后，再导入 Numba 函数
     from utils.handle_params import init_params
     from utils.mock_data import get_mock_data
-    from utils.convert_output import convert_output
+    from utils.convert_output import convert_output, archive_data
 
     from parallel import run_parallel
     from signals.calculate_signal import SignalId, signal_dict
@@ -129,7 +129,7 @@ def run_main_logic(cache, enable64, show_timing, enable_warmup):
         if show_timing:
             params_end_time = time.perf_counter()
             params_duration = params_end_time - params_start_time
-            print(f"参数生成时间 (default_params): {params_duration:.4f} 秒")
+            print(f"默认参数生成运行时间: {params_duration:.4f} 秒")
 
         if show_timing:
             parallel_start_time = time.perf_counter()
@@ -153,24 +153,41 @@ def run_main_logic(cache, enable64, show_timing, enable_warmup):
 
     num = 0
 
-    token_path = Path("./data/config.json")
-    output_path = f"{token_path.parent}/output/{symbol}/{signal_select_id}"
-    final_result = convert_output(
+    # 转换数据
+    final_result, data_list = convert_output(
         params_tuple,
         result_tuple,
         num=num,
         data_suffix=".csv",
-        # save_local_dir=output_path,
-        save_zip_dir=output_path,
-        upload_server="http://127.0.0.1:5123/file/upload",
-        token_path=token_path,
     )
     print(f"num {num} final_result {final_result['performance']['total_profit_pct']}")
 
     if show_timing:
         convert_end_time = time.perf_counter()
         convert_duration = convert_end_time - convert_start_time
-        print(f"转换输出总运行时间: {convert_duration:.4f} 秒")
+        print(f"转换输出运行时间: {convert_duration:.4f} 秒")
+
+    if show_timing:
+        archive_start_time = time.perf_counter()
+
+    root_path = "./data"
+    token_path = Path(f"{root_path}/config.json")
+    child_path = f"{symbol}/{signal_select_id}"
+    output_path = f"{root_path}/output/{child_path}"
+    # 存档数据
+    archive_data(
+        data_list,
+        # save_local_dir=output_path,
+        # save_zip_dir=output_path,
+        upload_server="http://127.0.0.1:5123/file/upload",
+        server_dir=child_path,
+        token_path=token_path,
+    )
+
+    if show_timing:
+        archive_end_time = time.perf_counter()
+        archive_duration = archive_end_time - archive_start_time
+        print(f"数据存档运行时间: {archive_duration:.4f} 秒")
 
     # 记录整个main函数结束时间并打印总运行时间
     if show_timing:
