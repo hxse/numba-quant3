@@ -250,7 +250,6 @@ dependencies = [
     { name = "httpx" },
     { name = "memory-profiler" },
     { name = "numba" },
-    { name = "pandas" },
     { name = "polars" },
     { name = "pyarrow" },
     { name = "typer" },
@@ -258,6 +257,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "pandas" },
     { name = "pandas-ta" },
     { name = "pytest" },
     { name = "ta-lib", version = "0.6.4", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'win32'" },
@@ -269,7 +269,6 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "memory-profiler", specifier = ">=0.61.0" },
     { name = "numba", specifier = ">=0.61.2" },
-    { name = "pandas", specifier = ">=2.3.2" },
     { name = "polars", specifier = ">=1.33.1" },
     { name = "pyarrow", specifier = ">=21.0.0" },
     { name = "typer", specifier = ">=0.16.0" },
@@ -277,6 +276,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "pandas", specifier = ">=2.3.2" },
     { name = "pandas-ta", git = "https://github.com/hxse/pandas-ta.git?rev=development" },
     { name = "pytest", specifier = ">=8.4.1" },
     { name = "ta-lib", marker = "sys_platform != 'win32'" },

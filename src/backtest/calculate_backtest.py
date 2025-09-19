@@ -16,12 +16,12 @@ from src.indicators.atr import calc_atr
 from src.parallel_signature import backtest_signature
 
 
-cache = numba_config["cache"]
+enable_cache = numba_config["enable_cache"]
 nb_float = numba_config["nb"]["float"]
 nb_bool = numba_config["nb"]["bool"]
 
 
-@njit(cache=cache)
+@njit(cache=enable_cache)
 def get_backtest_keys():
     _l = List.empty_list(types.unicode_type)
     for i in ("enter_long", "exit_long", "enter_short", "exit_short"):
@@ -29,7 +29,7 @@ def get_backtest_keys():
     return _l
 
 
-@njit(cache=cache)
+@njit(cache=enable_cache)
 def get_backtest_params_keys():
     _l = List.empty_list(types.unicode_type)
     for i in (
@@ -62,7 +62,7 @@ def get_backtest_params_keys():
     return _l
 
 
-@njit(backtest_signature, cache=cache)
+@njit(backtest_signature, cache=enable_cache)
 def calc_backtest(tohlcv, backtest_params, signal_output, backtest_output):
     """
     backtest_output["position"] 代表仓位状态,0无仓位,1开多,2持多,3平多,4平空开多,-1开空,-2持空,-3平空,-4平多开空

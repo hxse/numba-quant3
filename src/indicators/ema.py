@@ -2,12 +2,12 @@ import numpy as np
 from numba import njit
 from src.utils.constants import numba_config
 
-cache = numba_config["cache"]
+enable_cache = numba_config["enable_cache"]
 nb_int = numba_config["nb"]["int"]
 nb_float = numba_config["nb"]["float"]
 
 
-@njit(nb_float[:](nb_float[:], nb_int), cache=cache)
+@njit(nb_float[:](nb_float[:], nb_int), cache=enable_cache)
 def calc_ema(close, period):
     # 如果周期大于等于输入数据长度，或者周期小于等于 1，直接返回空数组或 NaN 数组
     if period >= len(close) or period <= 1:

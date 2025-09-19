@@ -31,9 +31,9 @@ from .signal_3 import (
 )
 
 from src.utils.constants import numba_config
-from src.utils.handle_params import convert_keys
+from src.convert_params.param_key_utils import convert_keys
 
-cache = numba_config["cache"]
+enable_cache = numba_config["enable_cache"]
 
 
 nb_int = numba_config["nb"]["int"]
@@ -68,7 +68,7 @@ signal_dict = {
 }
 
 
-@njit(signal_signature, cache=cache)
+@njit(signal_signature, cache=enable_cache)
 def calc_signal(
     _tohlcv,
     _tohlcv_mtf,

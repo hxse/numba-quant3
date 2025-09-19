@@ -20,7 +20,10 @@ from memory_profiler import profile
 
 
 def main(
-    cache: bool = typer.Option(True, "--cache/--no-cache", help="启用或禁用Numba缓存"),
+    data_path: str = typer.Option("./data", help="设置data目录"),
+    enable_cache: bool = typer.Option(
+        True, "--cache/--no-cache", help="启用或禁用Numba缓存"
+    ),
     enable64: bool = typer.Option(True, "--64bit/--32bit", help="启用或禁用64位浮点数"),
     show_timing: bool = typer.Option(
         True, "--timing/--no-timing", help="启用或禁用运行时间打印。"
@@ -35,7 +38,7 @@ def main(
     """
     执行整个回测流程并可选地打印运行时间。
     """
-    params = (cache, enable64, show_timing, enable_warmup)
+    params = (data_path, enable_cache, enable64, show_timing, enable_warmup)
     if enable_profile:
         _func = profile(run_main_logic)
         _func(*params)
@@ -43,7 +46,7 @@ def main(
         run_main_logic(*params)
 
 
-def run_main_logic(cache, enable64, show_timing, enable_warmup):
+def run_main_logic(data_path, enable_cache, enable64, show_timing, enable_warmup):
     if show_timing:
         base_end_time = time.perf_counter()
         base_duration = base_end_time - base_start_time
@@ -53,18 +56,20 @@ def run_main_logic(cache, enable64, show_timing, enable_warmup):
         main_start_time = time.perf_counter()
 
     # 更新全局配置字典
-    set_numba_dtypes(numba_config, enable64=enable64, cache=cache)
-    print(f"cache from cli: {cache}")
+    set_numba_dtypes(numba_config, enable64=enable64, enable_cache=enable_cache)
+    print(f"cache from cli: {enable_cache}")
 
-    cache = numba_config["cache"]
+    enable_cache = numba_config["enable_cache"]
     np_int = numba_config["np"]["int"]
     np_float = numba_config["np"]["float"]
     np_bool = numba_config["np"]["bool"]
 
     # 在解析参数并更新全局配置字典后，再导入 Numba 函数
-    from utils.handle_params import init_params
+    from convert_params.param_initializer import init_params
     from utils.mock_data import get_mock_data
-    from utils.convert_output import convert_output, archive_data
+    from convert_output.process_data import process_data_output
+    from convert_output.archive_manager import archive_data
+    from convert_output.server_upload import get_token, get_local_dir
 
     from parallel import run_parallel
     from signals.calculate_signal import SignalId, signal_dict
@@ -97,7 +102,7 @@ def run_main_logic(cache, enable64, show_timing, enable_warmup):
         if i == 0 and not enable_warmup:
             continue
 
-        params_count = 1 if i == 0 else 1
+        params_count = 1 if i == 0 else 200
         signal_select_id = SignalId.signal_3_id.value
         smooth_mode = None
         is_only_performance = False if params_count == 1 else True
@@ -154,7 +159,7 @@ def run_main_logic(cache, enable64, show_timing, enable_warmup):
     num = 0
 
     # 转换数据
-    final_result, data_list = convert_output(
+    final_result, data_list = process_data_output(
         params_tuple,
         result_tuple,
         num=num,
@@ -170,18 +175,17 @@ def run_main_logic(cache, enable64, show_timing, enable_warmup):
     if show_timing:
         archive_start_time = time.perf_counter()
 
-    root_path = "./data"
-    token_path = Path(f"{root_path}/config.json")
-    child_path = f"{symbol}/{signal_select_id}"
-    output_path = f"{root_path}/output/{child_path}"
-    # 存档数据
+    server_dir = f"{symbol}/{signal_select_id}"
+    local_dir = get_local_dir(data_path, server_dir)
+    username, password = get_token(Path(f"{data_path}/config.json"))
     archive_data(
         data_list,
-        # save_local_dir=output_path,
-        # save_zip_dir=output_path,
-        upload_server="http://127.0.0.1:5123/file/upload",
-        server_dir=child_path,
-        token_path=token_path,
+        save_local_dir=local_dir,
+        save_zip_dir=local_dir,
+        upload_server="http://127.0.0.1:5123",
+        server_dir=server_dir,
+        username=username,
+        password=password,
     )
 
     if show_timing:

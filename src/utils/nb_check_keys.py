@@ -7,14 +7,14 @@ from numba.typed import Dict, List
 # 从全局配置中获取 Numba 类型
 from src.utils.constants import numba_config
 
-cache = numba_config["cache"]
+enable_cache = numba_config["enable_cache"]
 nb_float = numba_config["nb"]["float"]
 np_float = numba_config["np"]["float"]
 
-print("params cache", cache)
+print("params cache", enable_cache)
 
 
-@njit(cache=cache)
+@njit(cache=enable_cache)
 def check_keys(keys, dict_):
     if len(keys) == 0:
         return True
@@ -28,7 +28,7 @@ def check_keys(keys, dict_):
     return True
 
 
-@njit(cache=cache)
+@njit(cache=enable_cache)
 def check_mapping(signal_keys_mtf, data_mapping, data_count):
     # 使用一个静态元组来存储需要检查的键
     # 元组在 Numba 中是类型确定的，可以安全地遍历
@@ -51,7 +51,7 @@ def check_mapping(signal_keys_mtf, data_mapping, data_count):
     return True
 
 
-@njit(cache=cache)
+@njit(cache=enable_cache)
 def check_tohlcv_keys(tohlcv):
     for i in ("time", "open", "high", "low", "close", "volume"):
         if i not in tohlcv:
@@ -59,7 +59,7 @@ def check_tohlcv_keys(tohlcv):
     return True
 
 
-@njit(cache=cache)
+@njit(cache=enable_cache)
 def check_all(
     _tohlcv,
     _tohlcv_mtf,

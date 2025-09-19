@@ -4,24 +4,22 @@ from src.utils.constants import numba_config
 from src.indicators.sma import calc_sma
 
 
-cache = numba_config["cache"]
+enable_cache = numba_config["enable_cache"]
 nb_int = numba_config["nb"]["int"]
 nb_float = numba_config["nb"]["float"]
 
 
-# Numba 兼容的 non_zero_range 函数，精确模仿 pandas-ta
-@njit(nb_float[:](nb_float[:], nb_float[:]), cache=True)
+@njit(nb_float[:](nb_float[:], nb_float[:]), cache=enable_cache)
 def non_zero_range(high, low):
     diff = high - low
     epsilon = np.finfo(nb_float).eps  # 约 2.22e-16
     has_zero = np.any(diff == 0)
     if has_zero:
-        diff = diff + epsilon  # 对整个数组加 epsilon，匹配 pandas-ta
+        diff = diff + epsilon
     return diff
 
 
-# Numba 兼容的滚动方差函数（完全矢量化，模仿 pandas-ta 的 variance）
-@njit(nb_float[:](nb_float[:], nb_int, nb_int), cache=True)
+@njit(nb_float[:](nb_float[:], nb_int, nb_int), cache=enable_cache)
 def calc_variance(close, period, ddof):
     num_data = len(close)
     if period <= 1 or num_data < period or ddof >= period:
@@ -63,16 +61,15 @@ def calc_variance(close, period, ddof):
     return variance
 
 
-# Numba 兼容的标准差函数（模仿 pandas-ta 的 stdev）
-@njit(nb_float[:](nb_float[:], nb_int), cache=cache)
+@njit(nb_float[:](nb_float[:], nb_int), cache=enable_cache)
 def calc_stdev(close, period):
-    ddof = 0  # 匹配 pandas-ta 的 bbands 默认行为
+    ddof = 0
     variance = calc_variance(close, period, ddof)
     stdev_result = np.sqrt(variance)
     return stdev_result
 
 
-@njit(nb_float[:, :](nb_float[:], nb_int, nb_float), cache=cache)
+@njit(nb_float[:, :](nb_float[:], nb_int, nb_float), cache=enable_cache)
 def calc_bbands(close, length, std):
     bbands_period = length
     bbands_std_mult = std
@@ -104,8 +101,6 @@ def calc_bbands(close, length, std):
         100 * ulr[non_zero_mid_mask] / mid_band[non_zero_mid_mask]
     )
 
-    # 百分比计算：更直接的翻译
-    # 模仿 pandas-ta 的奇怪逻辑，对分子也使用 non_zero_range
     numerator_p = non_zero_range(close, lower_band)
     percent = numerator_p / ulr  # 让 NumPy 自行处理除法和 NaN/inf 的传播
 

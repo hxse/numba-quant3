@@ -6,12 +6,12 @@ from src.utils.constants import numba_config
 from src.indicators.rsi import calc_rma
 
 
-cache = numba_config["cache"]
+enable_cache = numba_config["enable_cache"]
 nb_int = numba_config["nb"]["int"]
 nb_float = numba_config["nb"]["float"]
 
 
-@njit(nb_float[:](nb_float[:], nb_float[:], nb_float[:]), cache=cache)
+@njit(nb_float[:](nb_float[:], nb_float[:], nb_float[:]), cache=enable_cache)
 def calc_tr(high, low, close):
     """
     矢量化计算真实波幅 (True Range, TR) 的函数。
@@ -33,7 +33,7 @@ def calc_tr(high, low, close):
     return tr
 
 
-@njit(nb_float[:](nb_float[:], nb_float[:], nb_float[:], nb_int), cache=cache)
+@njit(nb_float[:](nb_float[:], nb_float[:], nb_float[:], nb_int), cache=enable_cache)
 def calc_atr(high, low, close, period):
     """
     ATR计算函数，与TA-Lib逻辑完全一致，并进行了矢量化优化。

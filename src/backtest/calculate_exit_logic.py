@@ -10,13 +10,13 @@ from src.backtest.backtest_enums import is_long_position, is_short_position
 from backtest.update_exit_targets_utils import update_exit_targets
 from backtest.should_trigger_exit_utils import should_trigger_exit
 
-cache = numba_config["cache"]
+enable_cache = numba_config["enable_cache"]
 nb_float = numba_config["nb"]["float"]
 nb_bool = numba_config["nb"]["bool"]
 
 
 # 修改后: 简洁的主函数
-@njit(cache=cache)
+@njit(cache=enable_cache)
 def calc_exit_logic(
     i,
     target_price,

@@ -15,16 +15,19 @@ from src.backtest.calculate_performance import calc_performance
 
 from src.parallel_signature import parallel_signature
 
-cache = numba_config["cache"]
+
+enable_cache = numba_config["enable_cache"]
+
 
 nb_int = numba_config["nb"]["int"]
 nb_float = numba_config["nb"]["float"]
 nb_bool = numba_config["nb"]["bool"]
 
-print("parallel_entry cache", cache)
+
+print("parallel_entry cache", enable_cache)
 
 
-@njit(cache=cache)
+@njit(cache=enable_cache)
 def init_output_all(params_count, enable_fill):
     # 使用显式类型创建 Typed List
     indicators_output_list = List.empty_list(
@@ -72,7 +75,7 @@ def init_output_all(params_count, enable_fill):
 
 
 # 这是一个用于清空单个回测结果字典的工具函数。
-@njit(cache=cache)
+@njit(cache=enable_cache)
 def clear_list_element_at_index(
     i,
     indicators_output_list,
@@ -98,7 +101,7 @@ def clear_list_element_at_index(
     )
 
 
-@njit(parallel_signature, parallel=True, cache=cache)
+@njit(parallel_signature, parallel=True, cache=enable_cache)
 def run_parallel(
     tohlcv,
     indicator_params_list,

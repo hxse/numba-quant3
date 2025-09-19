@@ -3,12 +3,12 @@ from numba import njit
 from src.utils.constants import numba_config
 
 
-cache = numba_config["cache"]
+enable_cache = numba_config["enable_cache"]
 nb_int = numba_config["nb"]["int"]
 nb_float = numba_config["nb"]["float"]
 
 
-@njit(nb_float[:](nb_float[:], nb_int), cache=cache)
+@njit(nb_float[:](nb_float[:], nb_int), cache=enable_cache)
 def calc_sma(close, period):
     num_data = len(close)
     if period <= 1 or num_data < period:

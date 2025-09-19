@@ -22,8 +22,8 @@ def get_numba_dtypes(enable64: bool):
     return dtype_dict
 
 
-def set_numba_dtypes(numba_config, cache: bool, enable64: bool):
-    numba_config["cache"] = cache
+def set_numba_dtypes(numba_config, enable_cache: bool, enable64: bool):
+    numba_config["enable_cache"] = enable_cache
     numba_config["enable64"] = enable64
 
     dtype_dict = get_numba_dtypes(enable64)

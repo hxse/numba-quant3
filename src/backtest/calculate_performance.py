@@ -17,12 +17,11 @@ from src.backtest.backtest_enums import (
 
 from src.utils.nb_check_keys import check_keys, check_tohlcv_keys
 
-cache = numba_config["cache"]
-
+enable_cache = numba_config["enable_cache"]
 nb_float = numba_config["nb"]["float"]
 
 
-@njit(cache=cache)
+@njit(cache=enable_cache)
 def get_performance_keys():
     _l = List.empty_list(types.unicode_type)
     for i in ("position", "entry_price", "exit_price", "equity", "balance", "drawdown"):
@@ -30,7 +29,7 @@ def get_performance_keys():
     return _l
 
 
-@njit(cache=cache)
+@njit(cache=enable_cache)
 def get_backtest_params_keys():
     _l = List.empty_list(types.unicode_type)
     for i in ("annualization_factor",):
@@ -38,7 +37,7 @@ def get_backtest_params_keys():
     return _l
 
 
-@njit(performance_signature, cache=cache)
+@njit(performance_signature, cache=enable_cache)
 def calc_performance(tohlcv, backtest_params, backtest_output, performance_output):
     if not check_keys(get_performance_keys(), backtest_output):
         return

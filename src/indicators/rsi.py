@@ -2,12 +2,12 @@ import numpy as np
 from numba import njit, float64
 from src.utils.constants import numba_config
 
-cache = numba_config["cache"]
+enable_cache = numba_config["enable_cache"]
 nb_int = numba_config["nb"]["int"]
 nb_float = numba_config["nb"]["float"]
 
 
-@njit(nb_float[:](nb_float[:], nb_int), cache=cache)
+@njit(nb_float[:](nb_float[:], nb_int), cache=enable_cache)
 def calc_rma(series, length):
     """
     一个更接近TA-Lib逻辑的RMA实现，采用Numba优化后的矢量化方法。
@@ -31,7 +31,7 @@ def calc_rma(series, length):
     return result
 
 
-@njit(nb_float[:](nb_float[:], nb_int), cache=cache)
+@njit(nb_float[:](nb_float[:], nb_int), cache=enable_cache)
 def calc_rsi(close, length=14):
     """
     计算相对强弱指数（RSI），其逻辑与TA-Lib更接近。

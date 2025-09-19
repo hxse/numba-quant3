@@ -8,8 +8,14 @@ from numba import njit, float64
 import numpy as np
 
 
+enable_cache = numba_config["enable_cache"]
+nb_int = numba_config["nb"]["int"]
+nb_float = numba_config["nb"]["float"]
+nb_bool = numba_config["nb"]["bool"]
+
+
 # 假设 performance_signature 是您定义的类型签名
-@njit(cache=True)
+@njit(cache=enable_cache)
 def calc_sharpe(equity, annualization_factor):
     if len(equity) < 2 or annualization_factor <= 0:
         return 0.0
@@ -33,7 +39,7 @@ def calc_sharpe(equity, annualization_factor):
     return sharpe_ratio
 
 
-@njit(cache=True)
+@njit(cache=enable_cache)
 def calc_calmar(equity, drawdown, annualization_factor):
     if len(equity) < 2 or annualization_factor <= 0 or equity[0] == 0:
         return 0.0
@@ -58,7 +64,7 @@ def calc_calmar(equity, drawdown, annualization_factor):
     return calmar_ratio
 
 
-@njit(cache=True)
+@njit(cache=enable_cache)
 def calc_sortino(equity, annualization_factor, min_acceptable_return):
     if len(equity) < 2 or annualization_factor <= 0:
         return 0.0

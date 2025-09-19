@@ -3,14 +3,12 @@ from numba import njit
 from numba.core import types
 
 from src.utils.constants import numba_config
+from enum import IntEnum, unique
 
-cache = numba_config["cache"]
+enable_cache = numba_config["enable_cache"]
 nb_int = numba_config["nb"]["int"]
 nb_float = numba_config["nb"]["float"]
 nb_bool = numba_config["nb"]["bool"]
-
-
-from enum import IntEnum, unique
 
 
 @unique
@@ -34,7 +32,7 @@ ps = PositionStatus
 
 
 # 新增：Numba 兼容的辅助函数
-@njit(cache=cache)
+@njit(cache=enable_cache)
 def is_long_position(status_int):
     return status_int in (
         ps.ENTER_LONG.value,
@@ -43,7 +41,7 @@ def is_long_position(status_int):
     )
 
 
-@njit(cache=cache)
+@njit(cache=enable_cache)
 def is_short_position(status_int):
     return status_int in (
         ps.ENTER_SHORT.value,
@@ -52,7 +50,7 @@ def is_short_position(status_int):
     )
 
 
-@njit(cache=cache)
+@njit(cache=enable_cache)
 def is_no_position(status_int):
     return status_int in (
         ps.NO_POSITION.value,

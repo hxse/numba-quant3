@@ -7,12 +7,12 @@ from src.utils.constants import numba_config
 
 from src.utils.nb_check_keys import check_all
 
-cache = numba_config["cache"]
+enable_cache = numba_config["enable_cache"]
 
 signal_3_id = 3
 
 
-@njit(cache=cache)
+@njit(cache=enable_cache)
 def get_signal_3_keys():
     _l = List.empty_list(types.unicode_type)
     for i in ("bbands_upper", "bbands_middle", "bbands_lower"):
@@ -20,7 +20,7 @@ def get_signal_3_keys():
     return _l
 
 
-@njit(cache=cache)
+@njit(cache=enable_cache)
 def get_signal_3_keys_mtf():
     _l = List.empty_list(types.unicode_type)
     for i in ("sma", "sma2"):
@@ -28,7 +28,7 @@ def get_signal_3_keys_mtf():
     return _l
 
 
-@njit(cache=cache)
+@njit(cache=enable_cache)
 def calc_signal_3(
     _tohlcv,
     _tohlcv_mtf,

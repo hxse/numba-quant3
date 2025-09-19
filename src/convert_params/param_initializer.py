@@ -1,55 +1,20 @@
 import numpy as np
-import numba as nb
-
-# 从全局配置中获取 Numba 类型
-from src.utils.constants import numba_config
-
-cache = numba_config["cache"]
-nb_float = numba_config["nb"]["float"]
-np_float = numba_config["np"]["float"]
-
-
-from .nb_params import (
+from src.convert_params.annualization_calculator import get_annualization_factor
+from src.convert_params.param_template_manager import (
     create_params_list_template,
     set_params_list_value,
+)
+from src.convert_params.data_preprocessor import (
     get_data_mapping,
     init_tohlcv,
     init_tohlcv_smoothed,
 )
 
-
-def convert_keys(keys):
-    # 使用列表推导式获取所有元素
-    split_keys = [i.split("_")[0] for i in keys]
-
-    # 使用 dict.fromkeys() 高效去重并保留顺序
-    unique_list = list(dict.fromkeys(split_keys))
-
-    # 将结果转换为 tuple 并返回
-    return tuple(unique_list)
+from src.utils.constants import numba_config
 
 
-# 年化因子, 加密货币
-annualization_factor_dict = {
-    # 基于总分钟数计算
-    "1m": 365 * 24 * 60 / 1,
-    "3m": 365 * 24 * 60 / 3,
-    "5m": 365 * 24 * 60 / 5,
-    "10m": 365 * 24 * 60 / 10,
-    "15m": 365 * 24 * 60 / 15,
-    "30m": 365 * 24 * 60 / 30,
-    # 基于总小时数计算
-    "1h": 365 * 24 / 1,
-    "4h": 365 * 24 / 4,
-    "6h": 365 * 24 / 6,
-    "12h": 365 * 24 / 12,
-    # 基于总天数计算
-    "1d": 365 / 1,
-    # 每周
-    "1w": 365 / 7,
-    # 每月
-    "1M": 12,
-}
+nb_float = numba_config["nb"]["float"]
+np_float = numba_config["np"]["float"]
 
 
 def init_params(
@@ -108,7 +73,7 @@ def init_params(
             "annualization_factor",
             result[0]["backtest_params_list"],
             np.array(
-                [annualization_factor_dict[period] for i in range(params_count)],
+                [get_annualization_factor(period) for i in range(params_count)],
                 dtype=np_float,
             ),
         )

@@ -4,7 +4,7 @@ import numba as nb
 from numba import njit
 from src.utils.constants import numba_config
 
-cache = numba_config["cache"]
+enable_cache = numba_config["enable_cache"]
 nb_int = numba_config["nb"]["int"]
 nb_float = numba_config["nb"]["float"]
 
@@ -15,7 +15,7 @@ PsarState = nb.types.Tuple((nb_float, nb_float, nb_float, nb_float))
 # --- PSAR 初始化函数 (保持不变) ---
 @njit(
     PsarState(nb_float, nb_float, nb_float, nb_float, nb_float, nb_int, nb_float),
-    cache=cache,
+    cache=enable_cache,
 )
 def psar_init(
     high_prev, high_curr, low_prev, low_curr, close_prev, force_direction_int, af0
@@ -62,7 +62,7 @@ def psar_init(
         nb_float,
         nb_float,
     ),
-    cache=cache,
+    cache=enable_cache,
 )
 def psar_first_iteration(
     high_prev,
@@ -163,7 +163,7 @@ def psar_first_iteration(
         nb_float,
         nb_float,
     ),
-    cache=cache,
+    cache=enable_cache,
 )
 def psar_update(
     prev_state,
@@ -252,7 +252,7 @@ def psar_update(
         nb_float,
         nb_float,
     ),
-    cache=cache,
+    cache=enable_cache,
 )
 def calc_psar(high, low, close, af0, af_step, max_af):
     """

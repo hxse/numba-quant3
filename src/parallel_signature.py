@@ -5,7 +5,6 @@ from numba import types  # 确保导入types
 
 from src.utils.constants import numba_config
 
-cache = numba_config["cache"]
 
 # 使用 types 模块定义基本类型（假设 numba_config 已正确设置）
 nb_int = numba_config["nb"]["int"]  # e.g., types.int64

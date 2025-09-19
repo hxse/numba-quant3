@@ -10,12 +10,12 @@ from src.indicators.psar import psar_init, psar_first_iteration, psar_update
 from src.backtest.backtest_enums import is_long_position, is_short_position
 
 
-cache = numba_config["cache"]
+enable_cache = numba_config["enable_cache"]
 nb_float = numba_config["nb"]["float"]
 nb_bool = numba_config["nb"]["bool"]
 
 
-@njit(cache=cache)
+@njit(cache=enable_cache)
 def update_exit_targets(
     i,
     last_i,

@@ -14,11 +14,11 @@ from .rsi import calc_rsi
 from .atr import calc_atr
 from .psar import calc_psar
 
-cache = numba_config["cache"]
+enable_cache = numba_config["enable_cache"]
 nb_float = numba_config["nb"]["float"]
 
 
-@njit(indicators_signature, cache=cache)
+@njit(indicators_signature, cache=enable_cache)
 def calc_indicators(tohlcv, indicator_params, indicator_output):
     if not check_tohlcv_keys(tohlcv):
         return

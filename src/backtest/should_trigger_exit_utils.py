@@ -5,12 +5,12 @@ from numba.core import types
 from src.utils.constants import numba_config
 
 
-cache = numba_config["cache"]
+enable_cache = numba_config["enable_cache"]
 nb_float = numba_config["nb"]["float"]
 nb_bool = numba_config["nb"]["bool"]
 
 
-@njit(cache=cache)
+@njit(cache=enable_cache)
 def should_trigger_exit(
     is_long_pos,
     exit_check_price,

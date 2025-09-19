@@ -8,25 +8,25 @@ from src.utils.constants import numba_config
 from src.utils.nb_check_keys import check_all
 
 
-cache = numba_config["cache"]
+enable_cache = numba_config["enable_cache"]
 
 
 signal_0_id = 0
 
 
-@njit(cache=cache)
+@njit(cache=enable_cache)
 def get_signal_0_keys():
     _l = List.empty_list(types.unicode_type)
     return _l
 
 
-@njit(cache=cache)
+@njit(cache=enable_cache)
 def get_signal_0_keys_mtf():
     _l = List.empty_list(types.unicode_type)  # 如果只用大周期tohlcv数据,可以用""占位
     return _l
 
 
-@njit(cache=cache)
+@njit(cache=enable_cache)
 def calc_signal_0(
     _tohlcv,
     _tohlcv_mtf,

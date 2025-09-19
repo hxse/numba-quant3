@@ -12,13 +12,13 @@ from src.backtest.backtest_enums import (
 )
 
 
-cache = numba_config["cache"]
+enable_cache = numba_config["enable_cache"]
 nb_int = numba_config["nb"]["int"]
 nb_float = numba_config["nb"]["float"]
 nb_bool = numba_config["nb"]["bool"]
 
 
-@njit(cache=cache)
+@njit(cache=enable_cache)
 def calc_trade_logic(
     i,
     enter_long_signal,
