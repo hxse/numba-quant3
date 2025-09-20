@@ -140,3 +140,50 @@ def jitted_convert_all_dicts(
         #
         ("performance", performance_keys, performance_dict, performance_np),
     )
+
+
+@njit(cache=True)
+def simplified_convert_results(
+    result_list,
+    num,
+):
+    """
+    一个简化的 JIT 函数，用于将结果字典列表中的指定项转换为 NumPy 数组并返回。
+    """
+
+    (
+        indicators_output_list,
+        signals_output_list,
+        backtest_output_list,
+        performance_output_list,
+        indicators_output_list_mtf,
+    ) = result_list
+
+    # 从索引num中提取字典项
+    indicators_dict = get_item_from_dict_list(indicators_output_list, num)
+    signals_dict = get_item_from_dict_list(signals_output_list, num)
+    backtest_dict = get_item_from_dict_list(backtest_output_list, num)
+    indicators_mtf_dict = get_item_from_dict_list(indicators_output_list_mtf, num)
+    performance_dict = get_item_from_dict_list(performance_output_list, num)
+
+    # 提取字典的键
+    indicators_keys = get_dict_keys_as_list(indicators_dict)
+    signals_keys = get_dict_keys_as_list(signals_dict)
+    backtest_keys = get_dict_keys_as_list(backtest_dict)
+    indicators_mtf_keys = get_dict_keys_as_list(indicators_mtf_dict)
+    performance_keys = get_dict_keys_as_list(performance_dict)
+
+    # 将字典转换为 NumPy 数组
+    indicators_np = convert_dict_to_np_array(indicators_dict)
+    signals_np = convert_dict_to_np_array(signals_dict)
+    backtest_np = convert_dict_to_np_array(backtest_dict)
+    indicators_mtf_np = convert_dict_to_np_array(indicators_mtf_dict)
+    performance_np = convert_dict_to_np_array(performance_dict)
+
+    return (
+        ("indicators", indicators_keys, indicators_dict, indicators_np),
+        ("signals", signals_keys, signals_dict, signals_np),
+        ("backtest", backtest_keys, backtest_dict, backtest_np),
+        ("indicators_mtf", indicators_mtf_keys, indicators_mtf_dict, indicators_mtf_np),
+        ("performance", performance_keys, performance_dict, performance_np),
+    )

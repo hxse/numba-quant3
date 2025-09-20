@@ -56,12 +56,22 @@ def request_token(
             print("完整的响应内容：")
             print(json.dumps(token_data, indent=2))
             return None
-    except httpx.HTTPError as err:
-        print(f"HTTP 错误：{err}")
+
+    except httpx.HTTPStatusError as err:
+        # 处理 4xx, 5xx 等 HTTP 状态码错误
+        print(f"HTTP 状态错误：{err}")
         print(f"响应内容：{err.response.text}")
         return None
-    except httpx.RequestException as err:
-        print(f"发生请求错误：{err}")
+
+    except httpx.RequestError as err:
+        # 捕获所有与请求/网络相关的错误，如 ConnectError, TimeoutException
+        print(f"请求错误：{err}")
+        # 注意：这里 err.response 可能不存在，所以不要访问它
+        return None
+
+    except Exception as e:
+        # 捕获所有其他未知错误
+        print(f"发生未知错误：{e}")
         return None
 
 
@@ -104,7 +114,7 @@ def upload_data(
                 f"{upload_server}/file/upload", files=files, headers=headers
             )
             response.raise_for_status()
-            print("文件已成功上传到服务器。")
+            # print("文件已成功上传到服务器。")
             return  # 上传成功，退出循环和函数
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 401:
@@ -115,6 +125,7 @@ def upload_data(
                     del _TOKEN_CACHE[(username, password)]  # 清空缓存中的 token
             else:
                 print(f"上传文件到服务器失败: HTTP 状态码错误 - {e}")
+
         except (httpx.HTTPError, httpx.RequestError) as e:
             print(f"上传文件到服务器失败: 请求或HTTP错误 - {e}")
         except Exception as e:
@@ -171,4 +182,4 @@ def upload_to_server(
     # 假设如果函数执行到这里没有抛出异常，则表示上传尝试完成
     # 具体的成功/失败信息会在 upload_data 内部打印
     time_elapsed = time.perf_counter() - start_time
-    print(f"ZIP 文件上传过程完成，用时 {time_elapsed:.2f} 秒")
+    print(f"ZIP 文件上传用时 {time_elapsed:.2f} 秒")

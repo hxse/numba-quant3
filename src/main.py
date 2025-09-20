@@ -102,7 +102,7 @@ def run_main_logic(data_path, enable_cache, enable64, show_timing, enable_warmup
         if i == 0 and not enable_warmup:
             continue
 
-        params_count = 1 if i == 0 else 200
+        params_count = 1 if i == 0 else 1
         signal_select_id = SignalId.signal_3_id.value
         smooth_mode = None
         is_only_performance = False if params_count == 1 else True
