@@ -5,12 +5,26 @@ from numba.typed import List
 from src.utils.constants import numba_config
 
 
-from src.utils.nb_check_keys import check_all
+from src.utils.nb_check_keys import check_data_for_signal
 
 
 enable_cache = numba_config["enable_cache"]
 
 signal_1_id = 1
+
+
+@njit(cache=enable_cache)
+def get_signal_1_keys_test():
+    outer_list = List.empty_list(List.empty_list(types.unicode_type))
+
+    # 创建并填充内部列表
+    inner_list_1 = List.empty_list(types.unicode_type)
+    for i in ("sma", "sma2"):
+        inner_list_1.append(i)
+    outer_list.append(inner_list_1)
+
+    # 将内部列表添加到外部列表中
+    return outer_list
 
 
 @njit(cache=enable_cache)
@@ -36,7 +50,7 @@ def calc_signal_1(
     indicators_output_mtf,
     signal_output,
 ):
-    if not check_all(
+    if not check_data_for_signal(
         _tohlcv,
         _tohlcv_mtf,
         get_signal_1_keys(),

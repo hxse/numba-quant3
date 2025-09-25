@@ -15,14 +15,18 @@ from src.backtest.backtest_enums import (
     is_no_position,
 )
 
-from src.utils.nb_check_keys import check_keys, check_tohlcv_keys
+from src.utils.nb_check_keys import (
+    check_keys,
+    check_ohlcv_keys,
+    check_data_for_performance,
+)
 
 enable_cache = numba_config["enable_cache"]
 nb_float = numba_config["nb"]["float"]
 
 
 @njit(cache=enable_cache)
-def get_performance_keys():
+def get_b_params_need_keys():
     _l = List.empty_list(types.unicode_type)
     for i in ("position", "entry_price", "exit_price", "equity", "balance", "drawdown"):
         _l.append(i)
@@ -30,7 +34,7 @@ def get_performance_keys():
 
 
 @njit(cache=enable_cache)
-def get_backtest_params_keys():
+def get_b_output_need_keys():
     _l = List.empty_list(types.unicode_type)
     for i in ("annualization_factor",):
         _l.append(i)
@@ -38,20 +42,22 @@ def get_backtest_params_keys():
 
 
 @njit(performance_signature, cache=enable_cache)
-def calc_performance(tohlcv, backtest_params, backtest_output, performance_output):
-    if not check_keys(get_performance_keys(), backtest_output):
-        return
-    if not check_keys(get_backtest_params_keys(), backtest_params):
-        return
-    if not check_tohlcv_keys(tohlcv):
+def calc_performance(ohlcv_mtf, b_params, b_output, p_output):
+    if not check_data_for_performance(
+        ohlcv_mtf,
+        get_b_params_need_keys(),
+        get_b_output_need_keys(),
+        b_params,
+        b_output,
+    ):
         return
 
-    position = backtest_output["position"]
-    entry_price = backtest_output["entry_price"]
-    exit_price = backtest_output["exit_price"]
-    equity = backtest_output["equity"]
-    balance = backtest_output["balance"]
-    drawdown = backtest_output["drawdown"]
+    position = b_output["position"]
+    entry_price = b_output["entry_price"]
+    exit_price = b_output["exit_price"]
+    equity = b_output["equity"]
+    balance = b_output["balance"]
+    drawdown = b_output["drawdown"]
 
     # ------------------ 计算胜率和盈亏比 ------------------
     # 创建一个列表来存储每笔交易的百分比利润
@@ -110,28 +116,28 @@ def calc_performance(tohlcv, backtest_params, backtest_output, performance_outpu
     if current_no_pos > longest_no_pos:
         longest_no_pos = current_no_pos
 
-    performance_output["longest_no_position"] = longest_no_pos
-    performance_output["win_rate"] = win_rate
-    performance_output["profit_loss_ratio"] = profit_loss_ratio
+    p_output["longest_no_position"] = longest_no_pos
+    p_output["win_rate"] = win_rate
+    p_output["profit_loss_ratio"] = profit_loss_ratio
 
     # ------------------ 原始性能指标 ------------------
     # 定义年化因子，根据K线周期调整
     # 假设您的K线是5分钟，每年有252个交易日，每天8小时交易
     # annualization_factor = 252 * 8 * 12  # 12根5分钟K线/小时
-    annualization_factor = backtest_params["annualization_factor"]
+    annualization_factor = b_params["annualization_factor"]
 
     # 计算夏普比率并保存
     sharpe_ratio = calc_sharpe(equity, annualization_factor)
-    performance_output["sharpe_ratio"] = sharpe_ratio
+    p_output["sharpe_ratio"] = sharpe_ratio
 
     # 计算卡尔马比率并保存
     calmar_ratio = calc_calmar(equity, drawdown, annualization_factor)
-    performance_output["calmar_ratio"] = calmar_ratio
+    p_output["calmar_ratio"] = calmar_ratio
 
     sortino_ratio = calc_sortino(equity, annualization_factor, nb_float(0.0))
-    performance_output["sortino_ratio"] = sortino_ratio
+    p_output["sortino_ratio"] = sortino_ratio
 
     total_profit_pct = (equity[-1] / equity[0]) - 1.0
-    performance_output["total_profit_pct"] = total_profit_pct
-    performance_output["max_balance"] = np.max(balance)
-    performance_output["max_drawdown"] = np.max(drawdown)
+    p_output["total_profit_pct"] = total_profit_pct
+    p_output["max_balance"] = np.max(balance)
+    p_output["max_drawdown"] = np.max(drawdown)

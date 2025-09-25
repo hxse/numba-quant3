@@ -11,8 +11,6 @@ enable_cache = numba_config["enable_cache"]
 nb_float = numba_config["nb"]["float"]
 np_float = numba_config["np"]["float"]
 
-print("params cache", enable_cache)
-
 
 @njit(cache=enable_cache)
 def check_keys(keys, dict_):
@@ -29,30 +27,26 @@ def check_keys(keys, dict_):
 
 
 @njit(cache=enable_cache)
-def check_mapping(signal_keys_mtf, data_mapping, data_count):
-    # 使用一个静态元组来存储需要检查的键
-    # 元组在 Numba 中是类型确定的，可以安全地遍历
-    for key in ("mtf", "skip"):
-        # 处理 mtf 的特殊条件：如果 signal_keys_mtf 长度为0，则跳过对 mtf 的检查
-        if key == "mtf" and len(signal_keys_mtf) == 0:
-            continue
-
-        # 对当前的 key 执行通用的检查
+def check_mapping(data_mapping, ohlcv_mtf):
+    for i in range(1, len(ohlcv_mtf)):
+        key = f"mtf_{i}"
         if key not in data_mapping:
             return False
 
-        _item = data_mapping[key]
-        if len(_item) == 0:
+        if len(data_mapping[key]) != len(ohlcv_mtf[0]["time"]):
             return False
 
-        if len(_item) != data_count:
-            return False
+    if "skip" not in data_mapping:
+        return False
+
+    if len(data_mapping["skip"]) != len(ohlcv_mtf[0]["time"]):
+        return False
 
     return True
 
 
 @njit(cache=enable_cache)
-def check_tohlcv_keys(tohlcv):
+def check_ohlcv_keys(tohlcv):
     for i in ("time", "open", "high", "low", "close", "volume"):
         if i not in tohlcv:
             return False
@@ -60,34 +54,77 @@ def check_tohlcv_keys(tohlcv):
 
 
 @njit(cache=enable_cache)
-def check_all(
-    _tohlcv,
-    _tohlcv_mtf,
-    signal_keys,
-    signal_keys_mtf,
-    indicator_output,
-    indicators_output_mtf,
-    data_mapping,
-):
-    if not check_tohlcv_keys(_tohlcv):
+def check_ohlcv_mtf(ohlcv_mtf):
+    if len(ohlcv_mtf) < 1:
         return False
 
-    if len(signal_keys_mtf) > 0:
-        if not check_tohlcv_keys(_tohlcv_mtf):
+    for i in ohlcv_mtf:
+        if not check_ohlcv_keys(i):
+            return False
+    return True
+
+
+@njit(cache=enable_cache)
+def check_data_for_indicators(ohlcv):
+    if not check_ohlcv_keys(ohlcv):
+        return False
+    return True
+
+
+@njit(cache=enable_cache)
+def check_data_for_signal(
+    ohlcv_mtf, i_output_mtf_need_keys, i_output_mtf, data_mapping
+):
+    if not check_ohlcv_mtf(ohlcv_mtf):
+        return False
+
+    if not len(i_output_mtf_need_keys) == len(ohlcv_mtf) == len(i_output_mtf):
+        return False
+
+    for i in range(len(ohlcv_mtf)):
+        exist_key = check_keys(i_output_mtf_need_keys[i], i_output_mtf[i])
+        if not exist_key:
             return False
 
-    data_count = len(_tohlcv["close"])
-
-    exist_key = check_keys(signal_keys, indicator_output)
-    if not exist_key:
-        return False
-
-    exist_key = check_keys(signal_keys_mtf, indicators_output_mtf)
-    if not exist_key:
-        return False
-
-    exist_mapping = check_mapping(signal_keys_mtf, data_mapping, data_count)
+    exist_mapping = check_mapping(data_mapping, ohlcv_mtf)
     if not exist_mapping:
         return False
+
+    return True
+
+
+@njit(cache=enable_cache)
+def check_data_for_backtest(
+    ohlcv_mtf, s_output_need_keys, b_params_need_keys, s_output, b_params
+):
+    if not check_ohlcv_mtf(ohlcv_mtf):
+        return False
+
+    # 1. 输入数据校验
+    if not check_keys(s_output_need_keys, s_output):
+        return False
+
+    if not check_keys(b_params_need_keys, b_params):
+        return False
+
+    return True
+
+
+@njit(cache=enable_cache)
+def check_data_for_performance(
+    ohlcv_mtf,
+    b_params_need_keys,
+    b_output_need_keys,
+    b_params,
+    b_output,
+):
+    if not check_ohlcv_mtf(ohlcv_mtf):
+        return False
+
+    if not check_keys(b_output_need_keys, b_params):
+        return
+
+    if not check_keys(b_params_need_keys, b_output):
+        return
 
     return True

@@ -6,6 +6,7 @@ from numba.typed import Dict, List
 
 from src.convert_params.nb_params_signature import (
     get_data_mapping_signature,
+    get_data_mapping_mtf_signature,
     get_init_tohlcv_signature,
     get_init_tohlcv_smoothed_signature,
 )
@@ -18,29 +19,36 @@ nb_int = numba_config["nb"]["int"]
 nb_float = numba_config["nb"]["float"]
 
 
-@njit(get_data_mapping_signature, cache=enable_cache)
-def get_data_mapping(tohlcv_np, tohlcv_np_mtf):
+@njit(get_data_mapping_mtf_signature, cache=enable_cache)
+def get_data_mapping_mtf(ohlcv_mtf):
     _d = Dict.empty(
         key_type=types.unicode_type,
         value_type=nb_int[:],
     )
-    if (
-        tohlcv_np is None
-        or tohlcv_np_mtf is None
-        or tohlcv_np.shape[0] == 0
-        or tohlcv_np_mtf.shape[0] == 0
-    ):
+    assert len(ohlcv_mtf) > 0, "ohlcv_mtf至少要有一个元素"
+
+    # 提取基准时间序列
+    # 从字典中通过 "time" 键提取数组，而不是直接对字典进行切片
+    times = ohlcv_mtf[0]["time"]
+    _d["skip"] = np.ones(len(times), dtype=nb_int)
+
+    # 如果只有一个元素，无需进行映射
+    if len(ohlcv_mtf) == 1:
         return _d
 
-    times = tohlcv_np[:, 0]
-    mtf_times = tohlcv_np_mtf[:, 0]
+    # 循环处理每个 "ohlcv_mtf" 元素
+    # 从索引1开始，与索引0进行映射
+    for i in range(1, len(ohlcv_mtf)):
+        # 从字典中通过 "time" 键提取数组
+        mtf_times = ohlcv_mtf[i]["time"]
 
-    # 核心优化：使用 np.searchsorted 进行矢量化查找
-    # side='right' 找到第一个大于当前时间戳的位置
-    mapping_indices = np.searchsorted(mtf_times, times, side="right") - 1
+        # 使用 np.searchsorted 进行矢量化查找
+        mapping_indices = np.searchsorted(mtf_times, times, side="right") - 1
 
-    _d["mtf"] = mapping_indices.astype(nb_int)
-    _d["skip"] = np.ones(len(times), dtype=nb_int)  # 1 是不跳过，0 是跳过，默认值为1
+        # 使用 f"mtf_{num}" 格式的键
+        key = f"mtf_{i}"
+        _d[key] = mapping_indices.astype(nb_int)
+
     return _d
 
 
@@ -72,16 +80,15 @@ def init_tohlcv_smoothed(np_data, smooth_mode):
         key_type=types.unicode_type,
         value_type=nb_float[:],
     )
-    if np_data is None:
+    if np_data.shape[0] == 0 or np_data.shape[1] == 0:
         return tohlcv
+
     assert np_data.shape[1] >= 6, "tohlcv数据列数不足"
 
-    if smooth_mode is None:
-        return tohlcv
-    elif smooth_mode == "":
+    if smooth_mode == "ha":  # Heikin-Ashi
         new_np_data = np_data
     else:
-        raise KeyError(f"not match mode {smooth_mode}")
+        return tohlcv
 
     assert new_np_data.shape[0] == np_data.shape[0], "只允许长度相等的平滑数据"
 

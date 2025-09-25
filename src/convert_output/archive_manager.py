@@ -42,18 +42,18 @@ def archive_data(
     # 1. 可选操作：保存原始文件到本地
     if local_path:
         local_path.mkdir(parents=True, exist_ok=True)
-        for name, data in data_list:
-            file_path = local_path / name
-            save_data(data, file_path)
+        for i in data_list:
+            file_path = local_path / i["name"]
+            save_data(i["data"], file_path)
 
     # 2. 如果需要 ZIP 或上传，则生成 ZIP 数据
     if zip_dir_path or upload_server:
-        zip_start_time = time.perf_counter()
+        # zip_start_time = time.perf_counter()
         data_buffers = []
-        for name, data in data_list:
+        for i in data_list:
             # 确保 get_data_buffer 得到 Path 对象
-            buffer = get_data_buffer(data, Path(name))
-            data_buffers.append((Path(name), buffer))
+            buffer = get_data_buffer(i["data"], Path(i["name"]))
+            data_buffers.append((Path(i["name"]), buffer))
         # print(f"buffers生成用时, {time.perf_counter() - zip_start_time}")
 
         # zip_data = create_zip_buffer_parallel(data_buffers) #实测会慢, 因为数据太少了

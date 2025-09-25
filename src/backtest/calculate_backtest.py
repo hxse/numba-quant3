@@ -5,7 +5,7 @@ from numba.core import types
 from numba.typed import List, Dict
 
 from src.utils.constants import numba_config
-from src.utils.nb_check_keys import check_keys, check_tohlcv_keys
+from src.utils.nb_check_keys import check_data_for_backtest
 
 from src.backtest.calculate_trade_logic import calc_trade_logic
 from src.backtest.calculate_balance import calc_balance
@@ -22,7 +22,7 @@ nb_bool = numba_config["nb"]["bool"]
 
 
 @njit(cache=enable_cache)
-def get_backtest_keys():
+def get_s_output_need_keys():
     _l = List.empty_list(types.unicode_type)
     for i in ("enter_long", "exit_long", "enter_short", "exit_short"):
         _l.append(i)
@@ -30,7 +30,7 @@ def get_backtest_keys():
 
 
 @njit(cache=enable_cache)
-def get_backtest_params_keys():
+def get_b_params_need_keys():
     _l = List.empty_list(types.unicode_type)
     for i in (
         "init_money",
@@ -63,36 +63,37 @@ def get_backtest_params_keys():
 
 
 @njit(backtest_signature, cache=enable_cache)
-def calc_backtest(tohlcv, backtest_params, signal_output, backtest_output):
+def calc_backtest(ohlcv_mtf, b_params, s_output, b_output):
     """
     backtest_output["position"] 代表仓位状态,0无仓位,1开多,2持多,3平多,4平空开多,-1开空,-2持空,-3平空,-4平多开空
     Bar-by-Bar模式,在触发信号的下一根k线的开盘价离场,为了简化不考虑k线内部实时离场的功能
     比如无论索引last_i是触发止盈,还是触发止损,还是同时触发止盈止损,都会在索引i的open价格离场,没有区别,这样设计是为了简化回测
     可以多头,可以空头,但是每次只持一仓
     """
-    # 1. 输入数据校验
-    if not check_keys(get_backtest_keys(), signal_output):
+    if not check_data_for_backtest(
+        ohlcv_mtf,
+        get_s_output_need_keys(),
+        get_b_params_need_keys(),
+        s_output,
+        b_params,
+    ):
         return
 
-    if not check_tohlcv_keys(tohlcv):
-        return
-
-    if not check_keys(get_backtest_params_keys(), backtest_params):
-        return
+    ohlcv_a = ohlcv_mtf[0]
 
     # 2. 从字典中提取数据数组
-    open_arr = tohlcv["open"]
-    high_arr = tohlcv["high"]
-    low_arr = tohlcv["low"]
-    close_arr = tohlcv["close"]
-    volume_arr = tohlcv["volume"]
+    open_arr = ohlcv_a["open"]
+    high_arr = ohlcv_a["high"]
+    low_arr = ohlcv_a["low"]
+    close_arr = ohlcv_a["close"]
+    volume_arr = ohlcv_a["volume"]
 
     data_count = len(close_arr)
 
-    enter_long_signal = signal_output["enter_long"]
-    exit_long_signal = signal_output["exit_long"]
-    enter_short_signal = signal_output["enter_short"]
-    exit_short_signal = signal_output["exit_short"]
+    enter_long_signal = s_output["enter_long"]
+    exit_long_signal = s_output["exit_long"]
+    enter_short_signal = s_output["enter_short"]
+    exit_short_signal = s_output["exit_short"]
 
     # 3. 初始化回测结果数组
     position = np.full(data_count, 0, dtype=nb_float)
@@ -103,11 +104,11 @@ def calc_backtest(tohlcv, backtest_params, signal_output, backtest_output):
     drawdown = np.full(data_count, np.nan, dtype=nb_float)
 
     # 4. 初始化临时变量和止损参数
-    init_money = backtest_params["init_money"]
+    init_money = b_params["init_money"]
     max_balance = np.full(data_count, np.nan, dtype=nb_float)
 
     # 计算 ATR 数组
-    atr_arr = calc_atr(high_arr, low_arr, close_arr, backtest_params["atr_period"])
+    atr_arr = calc_atr(high_arr, low_arr, close_arr, b_params["atr_period"])
 
     # 临时数组用于存储止损价格和 PSAR 状态
     pct_sl_arr = np.full(data_count, np.nan, dtype=nb_float)
@@ -130,31 +131,31 @@ def calc_backtest(tohlcv, backtest_params, signal_output, backtest_output):
 
     # numba传参有奇怪的优化问题,这里必须打包成元组,提高性能
     backtest_params_tuple = (
-        backtest_params["close_for_reversal"],  # 用close触发止损,还是high和low
-        backtest_params["pct_sl_enable"],  # 是否开启百分比止损
-        backtest_params["pct_tp_enable"],  # 是否开启百分比止盈
-        backtest_params["pct_tsl_enable"],  # 是否开启百分比跟踪止损
-        backtest_params["pct_sl"],  # 百分比止损倍率，例如0.02代表2%
-        backtest_params["pct_tp"],  # 百分比止盈倍率，例如0.05代表5%
-        backtest_params["pct_tsl"],  # 百分比跟踪止损倍率
-        backtest_params["atr_sl_enable"],  # 是否开启ATR止损
-        backtest_params["atr_tp_enable"],  # 是否开启ATR止盈
-        backtest_params["atr_tsl_enable"],  # 是否开启ATR跟踪止损
-        backtest_params["atr_sl_multiplier"],  # ATR止损倍数，例如3代表3倍ATR
-        backtest_params["atr_tp_multiplier"],  # ATR止盈倍数
-        backtest_params["atr_tsl_multiplier"],  # ATR跟踪止损倍数
-        backtest_params["psar_enable"],  # 是否开启PSAR止损
-        backtest_params["psar_af0"],  # PSAR的加速因子初始值
-        backtest_params["psar_af_step"],  # PSAR的加速因子步长
-        backtest_params["psar_max_af"],  # PSAR的最大加速因子
+        b_params["close_for_reversal"],  # 用close触发止损,还是high和low
+        b_params["pct_sl_enable"],  # 是否开启百分比止损
+        b_params["pct_tp_enable"],  # 是否开启百分比止盈
+        b_params["pct_tsl_enable"],  # 是否开启百分比跟踪止损
+        b_params["pct_sl"],  # 百分比止损倍率，例如0.02代表2%
+        b_params["pct_tp"],  # 百分比止盈倍率，例如0.05代表5%
+        b_params["pct_tsl"],  # 百分比跟踪止损倍率
+        b_params["atr_sl_enable"],  # 是否开启ATR止损
+        b_params["atr_tp_enable"],  # 是否开启ATR止盈
+        b_params["atr_tsl_enable"],  # 是否开启ATR跟踪止损
+        b_params["atr_sl_multiplier"],  # ATR止损倍数，例如3代表3倍ATR
+        b_params["atr_tp_multiplier"],  # ATR止盈倍数
+        b_params["atr_tsl_multiplier"],  # ATR跟踪止损倍数
+        b_params["psar_enable"],  # 是否开启PSAR止损
+        b_params["psar_af0"],  # PSAR的加速因子初始值
+        b_params["psar_af_step"],  # PSAR的加速因子步长
+        b_params["psar_max_af"],  # PSAR的最大加速因子
     )
 
-    commission_pct = backtest_params["commission_pct"]  # 基于百分比的手续费
-    commission_fixed = backtest_params["commission_fixed"]  # 固定金额的手续费
-    slippage_atr = backtest_params["slippage_atr"]  # 基于ATR的滑点倍数，用于计算滑点
-    slippage_pct = backtest_params["slippage_pct"]  # 基于百分比的滑点，用于计算滑点
+    commission_pct = b_params["commission_pct"]  # 基于百分比的手续费
+    commission_fixed = b_params["commission_fixed"]  # 固定金额的手续费
+    slippage_atr = b_params["slippage_atr"]  # 基于ATR的滑点倍数，用于计算滑点
+    slippage_pct = b_params["slippage_pct"]  # 基于百分比的滑点，用于计算滑点
     # 仓位大小：如果为0-1之间的小数，表示资金百分比；如果为大于等于1的整数(类型依然是小数)，则表示杠杆倍数
-    position_size = backtest_params["position_size"]
+    position_size = b_params["position_size"]
 
     # 5. 主循环
     for i in range(1, data_count):
@@ -230,22 +231,22 @@ def calc_backtest(tohlcv, backtest_params, signal_output, backtest_output):
         )
 
     # 将结果保存到 backtest_output 字典
-    backtest_output["position"] = position
-    backtest_output["entry_price"] = entry_price
-    backtest_output["exit_price"] = exit_price
-    backtest_output["equity"] = equity
-    backtest_output["balance"] = balance
-    backtest_output["drawdown"] = drawdown
+    b_output["position"] = position
+    b_output["entry_price"] = entry_price
+    b_output["exit_price"] = exit_price
+    b_output["equity"] = equity
+    b_output["balance"] = balance
+    b_output["drawdown"] = drawdown
 
     # 将新的止损止盈和PSAR数组保存到 backtest_output
-    backtest_output["pct_sl_arr"] = pct_sl_arr
-    backtest_output["pct_tp_arr"] = pct_tp_arr
-    backtest_output["pct_tsl_arr"] = pct_tsl_arr
-    backtest_output["atr_sl_arr"] = atr_sl_arr
-    backtest_output["atr_tp_arr"] = atr_tp_arr
-    backtest_output["atr_tsl_arr"] = atr_tsl_arr
-    backtest_output["psar_is_long_arr"] = psar_is_long_arr
-    backtest_output["psar_current_arr"] = psar_current_arr
-    backtest_output["psar_ep_arr"] = psar_ep_arr
-    backtest_output["psar_af_arr"] = psar_af_arr
-    backtest_output["psar_reversal_arr"] = psar_reversal_arr
+    b_output["pct_sl_arr"] = pct_sl_arr
+    b_output["pct_tp_arr"] = pct_tp_arr
+    b_output["pct_tsl_arr"] = pct_tsl_arr
+    b_output["atr_sl_arr"] = atr_sl_arr
+    b_output["atr_tp_arr"] = atr_tp_arr
+    b_output["atr_tsl_arr"] = atr_tsl_arr
+    b_output["psar_is_long_arr"] = psar_is_long_arr
+    b_output["psar_current_arr"] = psar_current_arr
+    b_output["psar_ep_arr"] = psar_ep_arr
+    b_output["psar_af_arr"] = psar_af_arr
+    b_output["psar_reversal_arr"] = psar_reversal_arr

@@ -5,10 +5,11 @@ from numba.typed import List
 import numba
 
 array_2d_type = types.float64[:, :]
+enable_cache = True
 
 
 # 在 njit 函数内部创建并填充 List
-@njit
+@njit(cache=enable_cache)
 def create_list_of_arrays(shapes_array):
     """
     根据输入的 shapes_array 动态创建一个包含多个2D数组的List。
@@ -25,7 +26,7 @@ def create_list_of_arrays(shapes_array):
 
 
 # --- 更新后的 JIT 工具函数 ---
-@njit
+@njit(cache=enable_cache)
 def get_item_from_numba_list(data_list, num):
     """
     一个JIT辅助函数，用于从Numba List中取出指定索引的元素。
@@ -35,7 +36,7 @@ def get_item_from_numba_list(data_list, num):
 
 
 # --- 更新后的 JIT 工具函数 ---
-@njit
+@njit(cache=enable_cache)
 def get_length_from_numba_list(data_list):
     """
     一个JIT辅助函数，用于从Numba List中取出指定索引的元素。

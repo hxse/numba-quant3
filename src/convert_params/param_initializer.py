@@ -1,14 +1,30 @@
 import numpy as np
+from typing import List, Dict
+import numpy.typing as npt
+
 from src.convert_params.annualization_calculator import get_annualization_factor
 from src.convert_params.param_template_manager import (
-    create_params_list_template,
     set_params_list_value,
+    set_params_list_value_mtf,
+    create_indicator_params_list,
+    create_backtest_params_list,
 )
 from src.convert_params.data_preprocessor import (
-    get_data_mapping,
     init_tohlcv,
     init_tohlcv_smoothed,
+    get_data_mapping_mtf,
 )
+from src.convert_params.param_key_utils import (
+    get_item_from_list,
+    get_item_from_2d_list,
+    create_list_dict_float_1d_empty,
+    create_list_dict_float_1d_one,
+    create_dict_float_1d_empty,
+    create_dict_float_1d_one,
+    append_item,
+    get_length_from_list_or_dict,
+)
+import time
 
 from src.utils.constants import numba_config
 
@@ -18,94 +34,91 @@ np_float = numba_config["np"]["float"]
 
 
 def init_params(
-    params_count,
-    signal_select_id,
-    signal_dict,
-    tohlcv_np,
-    tohlcv_np_mtf=None,
-    mapping_mtf=None,
-    smooth_mode=None,
-    period=None,
-    is_only_performance=False,
+    params_count: int,
+    signal_select_id: int,
+    signal_dict: Dict[int, Dict[str, List[List[str]]]],
+    ohlcv_mtf_np_list: List[npt.NDArray[np.generic]],
+    period_list: list[str],
+    smooth_mode: str = "",
+    is_only_performance: bool = False,
 ):
     """
-    三个mtf参数: tohlcv_np_mtf, indicator_params_list_mtf, mapping_mtf
+    三个mtf参数: ohlcv_mtf_np, indicator_params_list_mtf, mapping_mtf
     如果keys_mtf是(), 那么三个mtf参数都会被设为None
-    如果keys_mtf是(""),三个mtf参数都正常,只不过indicator_params_list_mtf不会有任何enable,需要tohlcv_np_mtf数据
-    如果keys_mtf是("sma")三个mtf参数都正常,indicator_params_list_mtf中的sma_enable会被打开, 需要tohlcv_np_mtf数据
+    如果keys_mtf是(""),三个mtf参数都正常,只不过indicator_params_list_mtf不会有任何enable,需要ohlcv_mtf_np数据
+    如果keys_mtf是("sma")三个mtf参数都正常,indicator_params_list_mtf中的sma_enable会被打开, 需要ohlcv_mtf_np数据
     """
+    # ---- 处理数据 ----
 
-    result = []
-    for keys in ["keys", "keys_mtf"]:
-        signal_keys = signal_dict[signal_select_id][keys]
+    smooth_mode = "" if not smooth_mode else smooth_mode
 
-        (indicator_params_list, backtest_params_list) = create_params_list_template(
-            params_count, empty=False
-        )
+    ohlcv_mtf_np_list = [i for i in ohlcv_mtf_np_list if i is not None]
 
-        set_params_list_value(
-            "signal_select",
-            backtest_params_list,
-            np.array([signal_select_id for i in range(params_count)], dtype=np_float),
-        )
+    signal_keys = signal_dict[signal_select_id]["keys"]
 
-        for i in signal_keys:
-            if i == "":
-                continue
-            key = f"{i}_enable"
-            target_array = np.array([True for i in range(params_count)], dtype=np_float)
+    assert len(ohlcv_mtf_np_list) == len(signal_keys), (
+        f"mtf多时间周期数据不匹配 {len(ohlcv_mtf_np_list)} {len(signal_keys)}"
+    )
 
-            set_params_list_value(
-                key,
-                indicator_params_list,
-                target_array,
-            )
-        result.append(
-            {
-                "indicator_params_list": indicator_params_list,
-                "backtest_params_list": backtest_params_list,
-            }
-        )
+    ohlcv_mtf = create_list_dict_float_1d_empty()
+    for i in ohlcv_mtf_np_list:
+        append_item(ohlcv_mtf, init_tohlcv(i))
 
-    # 更新年化因子
-    if period:
-        set_params_list_value(
-            "annualization_factor",
-            result[0]["backtest_params_list"],
-            np.array(
-                [get_annualization_factor(period) for i in range(params_count)],
-                dtype=np_float,
-            ),
-        )
+    data_mapping = get_data_mapping_mtf(ohlcv_mtf)
 
-    assert tohlcv_np is not None, "小周期数据不能为none"
+    ohlcv_smoothed_mtf = create_list_dict_float_1d_empty()
+    for i in ohlcv_mtf_np_list:
+        ohlcv_smoothed = init_tohlcv_smoothed(i, smooth_mode=smooth_mode)
+        if get_length_from_list_or_dict(ohlcv_smoothed) > 0:
+            append_item(ohlcv_smoothed_mtf, ohlcv_smoothed)
 
-    indicator_params_list_mtf = result[1]["indicator_params_list"]
-    signal_keys = signal_dict[signal_select_id]["keys_mtf"]
-    if len(signal_keys) == 0:
-        tohlcv_mtf = init_tohlcv(None)
-        indicator_params_list_mtf = create_params_list_template(
-            params_count, empty=True
-        )[0]
-        mapping_mtf = get_data_mapping(None, None)
-    else:
-        assert tohlcv_np_mtf is not None, "大周期数据不能为none"
-        tohlcv_mtf = init_tohlcv(tohlcv_np_mtf)
-        mapping_mtf = get_data_mapping(tohlcv_np, tohlcv_np_mtf)
+    assert (get_length_from_list_or_dict(ohlcv_smoothed_mtf) == 0) or (
+        get_length_from_list_or_dict(ohlcv_smoothed_mtf)
+        == get_length_from_list_or_dict(ohlcv_mtf)
+    ), "需要ohlcv_smoothed_mtf长度等于0, 或者等于ohlcv_mtf长度"
 
-    tohlcv = init_tohlcv(tohlcv_np)
-    tohlcv_smoothed = init_tohlcv_smoothed(tohlcv_np, smooth_mode=smooth_mode)
-    tohlcv_mtf_smoothed = init_tohlcv_smoothed(tohlcv_np_mtf, smooth_mode=smooth_mode)
+    # ---- 处理参数 ----
+
+    backtest_params = create_backtest_params_list(params_count, empty=False)
+
+    set_params_list_value(
+        "signal_select",
+        backtest_params,
+        np.full((params_count,), signal_select_id, dtype=np_float),
+    )
+
+    indicator_params_mtf = create_indicator_params_list(
+        params_count, len(signal_keys), empty=False
+    )
+
+    for idx, keys_array in enumerate(signal_keys):
+        for name in keys_array:
+            key = f"{name}_enable"
+            target_array = np.full((params_count,), True, dtype=np_float)
+            set_params_list_value_mtf(idx, key, indicator_params_mtf, target_array)
+
+    # ---- 年化因子 ----
+
+    assert isinstance(period_list, list), (
+        f"period_list must be list, but got {type(period_list)}"
+    )
+    assert all(isinstance(item, str) for item in period_list), (
+        "All items in period_list must be strings."
+    )
+    assert len(period_list) > 0, f"period length must > 1, but got {len(period_list)}"
+    annualization_factor = get_annualization_factor(period_list[0])
+    set_params_list_value(
+        "annualization_factor",
+        backtest_params,
+        np.full((params_count,), annualization_factor, dtype=np_float),
+    )
 
     result_dict = {
-        "tohlcv": tohlcv,
-        "indicator_params_list": result[0]["indicator_params_list"],
-        "backtest_params_list": result[0]["backtest_params_list"],
-        "tohlcv_mtf": tohlcv_mtf,
-        "indicator_params_list_mtf": indicator_params_list_mtf,
-        "mapping_mtf": mapping_mtf,
-        "tohlcv_smoothed": tohlcv_smoothed,
-        "tohlcv_mtf_smoothed": tohlcv_mtf_smoothed,
+        "ohlcv_mtf": ohlcv_mtf,
+        "ohlcv_smoothed_mtf": ohlcv_smoothed_mtf,
+        "data_mapping": data_mapping,
+        "indicator_params_mtf": indicator_params_mtf,
+        "backtest_params": backtest_params,
         "is_only_performance": is_only_performance,
     }
 

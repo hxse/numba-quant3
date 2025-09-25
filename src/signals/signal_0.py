@@ -5,13 +5,19 @@ from numba.typed import List
 from src.utils.constants import numba_config
 
 
-from src.utils.nb_check_keys import check_all
+from src.utils.nb_check_keys import check_data_for_signal
 
 
 enable_cache = numba_config["enable_cache"]
 
 
 signal_0_id = 0
+
+
+@njit(cache=enable_cache)
+def get_signal_0_keys_test():
+    outer_list = List.empty_list(List.empty_list(types.unicode_type))
+    return outer_list
 
 
 @njit(cache=enable_cache)
@@ -39,7 +45,7 @@ def calc_signal_0(
     calc_signal_0是占位的空函数
     """
 
-    if not check_all(
+    if not check_data_for_signal(
         _tohlcv,
         _tohlcv_mtf,
         get_signal_0_keys(),
