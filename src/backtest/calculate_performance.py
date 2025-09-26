@@ -28,7 +28,7 @@ nb_float = numba_config["nb"]["float"]
 @njit(cache=enable_cache)
 def get_b_params_need_keys():
     _l = List.empty_list(types.unicode_type)
-    for i in ("position", "entry_price", "exit_price", "equity", "balance", "drawdown"):
+    for i in ("annualization_factor",):
         _l.append(i)
     return _l
 
@@ -36,7 +36,7 @@ def get_b_params_need_keys():
 @njit(cache=enable_cache)
 def get_b_output_need_keys():
     _l = List.empty_list(types.unicode_type)
-    for i in ("annualization_factor",):
+    for i in ("position", "entry_price", "exit_price", "equity", "balance", "drawdown"):
         _l.append(i)
     return _l
 

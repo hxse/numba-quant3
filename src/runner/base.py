@@ -64,22 +64,22 @@ class BacktestRunner(
         导入与并行计算相关的模块。
         """
         import numpy as np
-        from src.convert_params.param_initializer import init_params
         from src.utils.mock_data import get_mock_data
+        from src.convert_params.param_initializer import init_params
+        from src.parallel import run_parallel
         from src.convert_output.process_data import process_data_output
         from src.convert_output.archive_manager import archive_data
         from src.convert_output.server_upload import get_token, get_local_dir
-        from src.parallel import run_parallel
         from src.signals.calculate_signal import SignalId, signal_dict
 
         self.np = np
-        self.init_params = init_params
         self.get_mock_data = get_mock_data
+        self.init_params = init_params
+        self.run_parallel = run_parallel
         self.process_data_output = process_data_output
         self.archive_data = archive_data
         self.get_token = get_token
         self.get_local_dir = get_local_dir
-        self.run_parallel = run_parallel
         self.SignalId = SignalId
         self.signal_dict = signal_dict
 

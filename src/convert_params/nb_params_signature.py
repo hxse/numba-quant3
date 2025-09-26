@@ -11,17 +11,21 @@ nb_int = numba_config["nb"]["int"]
 nb_float = numba_config["nb"]["float"]
 nb_bool = numba_config["nb"]["bool"]
 
-
 dict_float_type = DictType(unicode_type, nb_float)
 list_dict_float_type = ListType(dict_float_type)
 list_list_dict_float_type = ListType(ListType(dict_float_type))
 dict_float_1d_type = DictType(unicode_type, nb_float[:])
 dict_int_1d_type = DictType(unicode_type, nb_int[:])
 list_dict_float_1d_type = ListType(dict_float_1d_type)
+list_unicode_type = ListType(unicode_type)
+list_list_unicode_type = ListType(list_unicode_type)
 
 
 get_indicator_params_signature = dict_float_type(nb_bool)
 get_backtest_params_signature = dict_float_type(nb_bool)
+get_indicator_need_keys_signature = list_list_unicode_type(
+    list_dict_float_type, list_dict_float_type
+)
 
 
 create_indicator_params_list_signature = list_list_dict_float_type(

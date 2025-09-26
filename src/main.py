@@ -66,9 +66,7 @@ def main(
         result = runner.run(**params)
 
     result_converted, data_list = result
-    # import pdb
 
-    # pdb.set_trace()
     return result
 
 

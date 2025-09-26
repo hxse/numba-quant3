@@ -1,6 +1,6 @@
 import numpy as np
 import numba as nb
-from numba import njit, typeof
+from numba import njit, typeof, literal_unroll
 from numba.core import types
 from numba.core.types import unicode_type
 from numba.typed import Dict, List
@@ -28,45 +28,17 @@ from src.utils.constants import numba_config
 
 enable_cache = numba_config["enable_cache"]
 nb_float = numba_config["nb"]["float"]
+nb_bool = numba_config["nb"]["bool"]
 np_float = numba_config["np"]["float"]
 
 
-def convert_keys(keys, is_split=True):
-    _l = create_list_unicode_one()
-    _l_2d = create_2d_list_unicode_one()
-    n = get_length_from_list_or_dict(keys)
-
-    def split_str(x):
-        if is_split:
-            return x.split("_")[0]
-        return x
-
-    if typeof(keys) == typeof(_l):
-        # 单层列表推导式，无冗余
-        split_keys = [split_str(get_item_from_list(keys, i)) for i in range(n)]
-        return list(dict.fromkeys(split_keys))
-
-    elif typeof(keys) == typeof(_l_2d):
-        result_outer_keys = []  # 使用一个普通列表来收集结果
-
-        # 遍历外部列表
-        for i in range(n):
-            inner_list = get_item_from_list(keys, i)  # 只调用一次
-            m = get_length_from_list_or_dict(inner_list)  # 只调用一次
-
-            result_inner_list = []
-            # 遍历内部列表
-            for j in range(m):
-                key = get_item_from_list(inner_list, j)
-                result_inner_list.append(split_str(key))
-
-            result_inner_list = list(dict.fromkeys(result_inner_list))
-            result_outer_keys.append(result_inner_list)
-
-        return result_outer_keys
-
-    else:
-        raise RuntimeError(f"未知类型 {typeof(keys)}")
+def convert_keys(keys_tuple, is_split=True):
+    value_list, optim_list = keys_tuple
+    value_list = convert_nb_list_to_py_list(value_list)
+    optim_list = convert_nb_list_to_py_list(optim_list)
+    value_list = [get_nb_dict_keys_as_py_dict(i) for i in value_list]
+    optim_list = [get_nb_dict_keys_as_py_dict(i) for i in optim_list]
+    return value_list, optim_list
 
 
 # --- 更新后的 JIT 工具函数 ---
@@ -146,3 +118,8 @@ def get_nb_dict_keys_and_value_as_py_list(nb_dict):
     keys = convert_nb_list_to_py_list(keys)
     values = convert_nb_list_to_py_list(values)
     return keys, values
+
+
+def get_nb_dict_keys_as_py_dict(nb_dict):
+    keys, values = get_nb_dict_keys_and_value_as_py_list(nb_dict)
+    return {k: v for k, v in zip(keys, values)}

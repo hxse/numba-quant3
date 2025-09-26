@@ -1,6 +1,6 @@
 import numpy as np
 from typing import List, Dict
-import numpy.typing as npt
+from numpy import ndarray
 
 from src.convert_params.annualization_calculator import get_annualization_factor
 from src.convert_params.param_template_manager import (
@@ -24,7 +24,7 @@ from src.convert_params.param_key_utils import (
     append_item,
     get_length_from_list_or_dict,
 )
-import time
+
 
 from src.utils.constants import numba_config
 
@@ -37,7 +37,7 @@ def init_params(
     params_count: int,
     signal_select_id: int,
     signal_dict: Dict[int, Dict[str, List[List[str]]]],
-    ohlcv_mtf_np_list: List[npt.NDArray[np.generic]],
+    ohlcv_mtf_np_list: List[ndarray[np.generic]],
     period_list: list[str],
     smooth_mode: str = "",
     is_only_performance: bool = False,
@@ -54,10 +54,13 @@ def init_params(
 
     ohlcv_mtf_np_list = [i for i in ohlcv_mtf_np_list if i is not None]
 
-    signal_keys = signal_dict[signal_select_id]["keys"]
+    value_list, optim_list = signal_dict[signal_select_id]["keys"]
+    assert len(value_list) == len(optim_list), (
+        f"value_list和optim_list长度应该相等 {value_list} {optim_list}"
+    )
 
-    assert len(ohlcv_mtf_np_list) == len(signal_keys), (
-        f"mtf多时间周期数据不匹配 {len(ohlcv_mtf_np_list)} {len(signal_keys)}"
+    assert len(ohlcv_mtf_np_list) == len(value_list), (
+        f"mtf多时间周期数据不匹配 {len(ohlcv_mtf_np_list)} {len(value_list)}"
     )
 
     ohlcv_mtf = create_list_dict_float_1d_empty()
@@ -79,7 +82,9 @@ def init_params(
 
     # ---- 处理参数 ----
 
-    backtest_params = create_backtest_params_list(params_count, empty=False)
+    backtest_params = create_backtest_params_list(
+        params_count, use_presets_backtest_params=False
+    )
 
     set_params_list_value(
         "signal_select",
@@ -88,14 +93,13 @@ def init_params(
     )
 
     indicator_params_mtf = create_indicator_params_list(
-        params_count, len(signal_keys), empty=False
+        params_count, len(value_list), use_presets_indicator_params=False
     )
-
-    for idx, keys_array in enumerate(signal_keys):
-        for name in keys_array:
-            key = f"{name}_enable"
-            target_array = np.full((params_count,), True, dtype=np_float)
-            set_params_list_value_mtf(idx, key, indicator_params_mtf, target_array)
+    for idx, keys_array in enumerate(value_list):
+        for key in keys_array:
+            if "_enable_" in key:
+                target_array = np.full((params_count,), True, dtype=np_float)
+                set_params_list_value_mtf(idx, key, indicator_params_mtf, target_array)
 
     # ---- 年化因子 ----
 

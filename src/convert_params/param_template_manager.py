@@ -26,7 +26,7 @@ nb_bool = numba_config["nb"]["bool"]
 
 
 @njit(create_indicator_params_list_signature, cache=enable_cache)
-def create_indicator_params_list(params_count, mtf_count, empty):
+def create_indicator_params_list(params_count, mtf_count, use_presets_indicator_params):
     """
     创建并返回一个嵌套列表，
     外层由 params_count 控制，内层由 mtf_count 控制。
@@ -56,7 +56,7 @@ def create_indicator_params_list(params_count, mtf_count, empty):
         # 内层循环：根据时间框架数量 (mtf_count)
         for _ in range(mtf_count):
             # 向当前时间框架列表中添加一个指标参数字典
-            mtf_params_list.append(get_indicator_params(empty))
+            mtf_params_list.append(get_indicator_params(use_presets_indicator_params))
 
         # 将已填充的、代表一个参数组合的 mtf 列表添加到最终列表中
         indicator_params_list_final.append(mtf_params_list)
@@ -65,7 +65,7 @@ def create_indicator_params_list(params_count, mtf_count, empty):
 
 
 @njit(create_backtest_params_list_signature, cache=enable_cache)
-def create_backtest_params_list(params_count, empty):
+def create_backtest_params_list(params_count, use_presets_backtest_params):
     """
     创建并返回回测参数列表。
     """
@@ -79,7 +79,7 @@ def create_backtest_params_list(params_count, empty):
     )
 
     for _ in range(params_count):
-        backtest_params_list.append(get_backtest_params(empty))
+        backtest_params_list.append(get_backtest_params(use_presets_backtest_params))
 
     return backtest_params_list
 

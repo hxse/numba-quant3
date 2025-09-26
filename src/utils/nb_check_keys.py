@@ -121,10 +121,10 @@ def check_data_for_performance(
     if not check_ohlcv_mtf(ohlcv_mtf):
         return False
 
-    if not check_keys(b_output_need_keys, b_params):
-        return
+    if not check_keys(b_params_need_keys, b_params):
+        return False
 
-    if not check_keys(b_params_need_keys, b_output):
-        return
+    if not check_keys(b_output_need_keys, b_output):
+        return False
 
     return True
