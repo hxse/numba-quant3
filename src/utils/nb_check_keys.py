@@ -72,17 +72,15 @@ def check_data_for_indicators(ohlcv):
 
 
 @njit(cache=enable_cache)
-def check_data_for_signal(
-    ohlcv_mtf, i_output_mtf_need_keys, i_output_mtf, data_mapping
-):
+def check_data_for_signal(ohlcv_mtf, need_keys, i_output_mtf, data_mapping):
     if not check_ohlcv_mtf(ohlcv_mtf):
         return False
 
-    if not len(i_output_mtf_need_keys) == len(ohlcv_mtf) == len(i_output_mtf):
+    if not len(need_keys) == len(ohlcv_mtf) == len(i_output_mtf):
         return False
 
     for i in range(len(ohlcv_mtf)):
-        exist_key = check_keys(i_output_mtf_need_keys[i], i_output_mtf[i])
+        exist_key = check_keys(need_keys[i], i_output_mtf[i])
         if not exist_key:
             return False
 

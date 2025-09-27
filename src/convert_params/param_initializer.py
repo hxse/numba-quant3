@@ -41,6 +41,8 @@ def init_params(
     period_list: list[str],
     smooth_mode: str = "",
     is_only_performance: bool = False,
+    use_presets_indicator_params: bool = False,
+    use_presets_backtest_params: bool = False,
 ):
     """
     三个mtf参数: ohlcv_mtf_np, indicator_params_list_mtf, mapping_mtf
@@ -48,6 +50,7 @@ def init_params(
     如果keys_mtf是(""),三个mtf参数都正常,只不过indicator_params_list_mtf不会有任何enable,需要ohlcv_mtf_np数据
     如果keys_mtf是("sma")三个mtf参数都正常,indicator_params_list_mtf中的sma_enable会被打开, 需要ohlcv_mtf_np数据
     """
+
     # ---- 处理数据 ----
 
     smooth_mode = "" if not smooth_mode else smooth_mode
@@ -83,7 +86,7 @@ def init_params(
     # ---- 处理参数 ----
 
     backtest_params = create_backtest_params_list(
-        params_count, use_presets_backtest_params=False
+        params_count, use_presets_backtest_params=use_presets_backtest_params
     )
 
     set_params_list_value(
@@ -93,13 +96,15 @@ def init_params(
     )
 
     indicator_params_mtf = create_indicator_params_list(
-        params_count, len(value_list), use_presets_indicator_params=False
+        params_count,
+        len(value_list),
+        use_presets_indicator_params=use_presets_indicator_params,
     )
+
     for idx, keys_array in enumerate(value_list):
-        for key in keys_array:
-            if "_enable_" in key:
-                target_array = np.full((params_count,), True, dtype=np_float)
-                set_params_list_value_mtf(idx, key, indicator_params_mtf, target_array)
+        for key, value in keys_array.items():
+            target_array = np.full((params_count,), value, dtype=np_float)
+            set_params_list_value_mtf(idx, key, indicator_params_mtf, target_array)
 
     # ---- 年化因子 ----
 

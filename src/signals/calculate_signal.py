@@ -1,6 +1,7 @@
 import numpy as np
 import numba as nb
 from numba import njit, types
+from numba.core.types import unicode_type
 from numba.typed import Dict, List
 from enum import IntEnum, auto
 
@@ -8,26 +9,10 @@ from enum import IntEnum, auto
 from parallel_signature import signal_signature
 
 
-from .signal_0 import (
-    calc_signal_0,
-    get_signal_0_keys_test,
-    # signal_0_id,
-)
-from .signal_1 import (
-    calc_signal_1,
-    get_signal_1_keys_test,
-    # signal_1_id,
-)
-from .signal_2 import (
-    calc_signal_2,
-    get_signal_2_keys_test,
-    # signal_2_id,
-)
-from .signal_3 import (
-    calc_signal_3,
-    get_i_output_mtf_need_keys,
-    # signal_3_id,
-)
+from .signal_0 import calc_signal_0, define_signal_0_params
+from .signal_1 import calc_signal_1, define_signal_1_params
+from .signal_2 import calc_signal_2, define_signal_2_params
+from .signal_3 import calc_signal_3, define_signal_3_params
 
 from src.utils.constants import numba_config
 from src.convert_params.param_key_utils import (
@@ -58,17 +43,17 @@ class SignalId(IntEnum):
 si = SignalId
 
 signal_dict = {
-    # si.signal_0_id.value: {
-    #     "keys": convert_keys(get_signal_0_keys_test(), is_split=True),
-    # },
-    # si.signal_1_id.value: {
-    #     "keys": convert_keys(get_signal_1_keys_test(), is_split=True),
-    # },
-    # si.signal_2_id.value: {
-    #     "keys": convert_keys(get_signal_2_keys_test(), is_split=True),
-    # },
+    si.signal_0_id.value: {
+        "keys": convert_keys(define_signal_0_params()),
+    },
+    si.signal_1_id.value: {
+        "keys": convert_keys(define_signal_1_params()),
+    },
+    si.signal_2_id.value: {
+        "keys": convert_keys(define_signal_2_params()),
+    },
     si.signal_3_id.value: {
-        "keys": convert_keys(get_i_output_mtf_need_keys(), is_split=True),
+        "keys": convert_keys(define_signal_3_params()),
     },
 }
 
@@ -77,29 +62,28 @@ signal_dict = {
 def calc_signal(ohlcv_mtf, data_mapping, i_output_mtf, s_output, b_params):
     signal_select = b_params["signal_select"]
 
-    # if signal_select == si.signal_0_id.value:
-    #     calc_signal_0(
-    #         ohlcv_mtf,
-    #         data_mapping,
-    #         i_output_mtf,
-    #         s_output,
-    #     )
-    # elif signal_select == si.signal_1_id.value:
-    #     calc_signal_1(
-    #         ohlcv_mtf,
-    #         data_mapping,
-    #         i_output_mtf,
-    #         s_output,
-    #     )
-    # elif signal_select == si.signal_2_id.value:
-    #     calc_signal_2(
-    #         ohlcv_mtf,
-    #         data_mapping,
-    #         i_output_mtf,
-    #         s_output,
-    #     )
-
-    if signal_select == si.signal_3_id.value:
+    if signal_select == si.signal_0_id.value:
+        calc_signal_0(
+            ohlcv_mtf,
+            data_mapping,
+            i_output_mtf,
+            s_output,
+        )
+    if signal_select == si.signal_1_id.value:
+        calc_signal_1(
+            ohlcv_mtf,
+            data_mapping,
+            i_output_mtf,
+            s_output,
+        )
+    elif signal_select == si.signal_2_id.value:
+        calc_signal_2(
+            ohlcv_mtf,
+            data_mapping,
+            i_output_mtf,
+            s_output,
+        )
+    elif signal_select == si.signal_3_id.value:
         calc_signal_3(
             ohlcv_mtf,
             data_mapping,

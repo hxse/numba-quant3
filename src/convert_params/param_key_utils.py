@@ -32,7 +32,7 @@ nb_bool = numba_config["nb"]["bool"]
 np_float = numba_config["np"]["float"]
 
 
-def convert_keys(keys_tuple, is_split=True):
+def convert_keys(keys_tuple):
     value_list, optim_list = keys_tuple
     value_list = convert_nb_list_to_py_list(value_list)
     optim_list = convert_nb_list_to_py_list(optim_list)

@@ -21,8 +21,9 @@ def get_indicator_params(use_presets_indicator_params):
         key_type=types.unicode_type,
         value_type=nb_float,
     )
-    if use_presets_indicator_params:
+    if not use_presets_indicator_params:
         return params
+
     for i in range(mic.sma.value):
         params[f"sma_enable_{i}"] = nb_float(0)
         params[f"sma_period_{i}"] = nb_float(14)
@@ -107,7 +108,7 @@ def get_backtest_params(use_presets_backtest_params):
         key_type=types.unicode_type,
         value_type=nb_float,
     )
-    if use_presets_backtest_params:
+    if not use_presets_backtest_params:
         return params
 
     params["signal_select"] = nb_float(0)

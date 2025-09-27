@@ -15,6 +15,8 @@ class ParamsInitializer:
             "tohlcv_np_list",
             "period_list",
             "smooth_mode",
+            "use_presets_indicator_params",
+            "use_presets_backtest_params",
         )
 
         signal_select_id = self.SignalId[self.select_id].value
@@ -36,4 +38,6 @@ class ParamsInitializer:
             period_list=self.period_list,
             smooth_mode=self.smooth_mode,
             is_only_performance=self.is_only_performance,
+            use_presets_indicator_params=self.use_presets_indicator_params,
+            use_presets_backtest_params=self.use_presets_backtest_params,
         )

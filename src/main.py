@@ -38,12 +38,30 @@ def main(
     执行整个回测流程并可选地打印运行时间。
     """
 
-    params = {
-        "symbol": "mock",
+    _p1 = {
+        "select_id": "signal_0_id",
+        "period_list": ["15m"],
+        "data_count_list": [40000],
+    }
+    _p1 = {
+        "select_id": "signal_1_id",
         "period_list": ["15m", "1h"],
         "data_count_list": [40000, 10000],
-        "params_count": 1,
+    }
+    _p2 = {
+        "select_id": "signal_2_id",
+        "period_list": ["15m"],
+        "data_count_list": [40000],
+    }
+    _p3 = {
         "select_id": "signal_3_id",
+        "period_list": ["15m", "1h"],
+        "data_count_list": [40000, 10000],
+    }
+    params = {
+        "symbol": "mock",
+        **_p1,
+        "params_count": 1,
         #
         "data_path": "./data",
         "data_suffix": ".csv",

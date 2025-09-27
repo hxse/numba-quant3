@@ -26,23 +26,27 @@ class BacktestRunner(
         self.enable64 = enable64
         self.enable_warmup = enable_warmup
         self.show_timing = show_timing
-        # 初始化所有实例属性为 None
+        # run 参数
         self.symbol = None
         self.period_list = None
         self.data_count_list = None
-        self.select_id = None
         self.params_count = None
+        self.select_id = None
         self.convert_num = None
-        self.tohlcv_np_list = None
-        self.params_tuple = None
-        self.is_only_performance = None
-        self.result_tuple = None
-        self.result_converted = None
-        self.data_list = None
         self.smooth_mode = None
+        self.is_only_performance = None
+        self.use_presets_indicator_params = None
+        self.use_presets_backtest_params = None
+        # run 参数
         self.data_path = None
         self.data_suffix = None
         self.params_suffix = None
+        # 运行过程变量
+        self.tohlcv_np_list = None
+        self.params_tuple = None
+        self.result_tuple = None
+        self.result_converted = None
+        self.data_list = None
 
         with time_it(self.show_timing, "导入numba模块时间"):
             self._setup_numba_config()
@@ -94,6 +98,8 @@ class BacktestRunner(
         convert_num: int = 0,
         smooth_mode: str = "",
         is_only_performance: bool | str = "",  # 如果是str则视为auto模式
+        use_presets_indicator_params: bool = False,
+        use_presets_backtest_params: bool = False,
         #
         data_path="./data",
         data_suffix=".csv",
@@ -111,6 +117,8 @@ class BacktestRunner(
         self.convert_num = convert_num
         self.smooth_mode = smooth_mode
         self.is_only_performance = is_only_performance
+        self.use_presets_indicator_params = use_presets_indicator_params
+        self.use_presets_backtest_params = use_presets_backtest_params
         #
         self.data_path = data_path
         self.data_suffix = data_suffix
