@@ -6,6 +6,7 @@ from src.convert_params.param_template import get_indicator_need_keys
 from src.signals.tool import populate_indicator_dicts
 from src.utils.nb_check_keys import check_data_for_signal
 from src.indicators.calculate_indicators import MaxIndicatorCount as mic
+from parallel_signature import signal_child_signature
 
 from src.utils.constants import numba_config
 
@@ -16,44 +17,42 @@ nb_float = numba_config["nb"]["float"]
 nb_bool = numba_config["nb"]["bool"]
 
 
-@njit(cache=enable_cache)
-def define_signal_3_params():
-    num = 0
-    bbands_params = (
-        (num, 0, "bbands", "enable", np.array([True, True], dtype=nb_float)),
-        (num, 0, "bbands", "period", np.array([14, 5, 50, 1], dtype=nb_float)),
-        (num, 0, "bbands", "std_mult", np.array([2, 1, 5, 0.5], dtype=nb_float)),
-    )
-    assert bbands_params[-1][1] < mic.bbands.value, (
-        f"bbands数量超出最大限制 {bbands_params[-1][1]} {mic.bbands.value}"
-    )
-    num += 1
-    sma_params = (
-        (num, 0, "sma", "enable", np.array([True, True], dtype=nb_float)),
-        (num, 0, "sma", "period", np.array([14, 6, 200, 5], dtype=nb_float)),
-        # SMA 1
-        (num, 1, "sma", "enable", np.array([True, True], dtype=nb_float)),
-        (num, 1, "sma", "period", np.array([200, 100, 40, 5], dtype=nb_float)),
-    )
-    assert sma_params[-1][1] < mic.sma.value, (
-        f"sma数量超出最大限制 {sma_params[-1][1]} {mic.sma.value}"
-    )
-    all_indicator_data = (*bbands_params, *sma_params)
-
-    value_list, optim_list = populate_indicator_dicts(num, all_indicator_data)
-    return value_list, optim_list
+define_signal_3_params = [
+    [
+        {
+            "name": "bbands",
+            "enable": True,
+            # enable_optim, default_value, min_value, max_value, step, current_value
+            "period": [True, 14, 5, 50, 1, None],
+            "std_mult": [True, 2, 1, 5, 0.5, None],
+        }
+    ],
+    [
+        {
+            "name": "sma",
+            "enable": True,
+            "period": [True, 14, 5, 60, 3, None],
+        },
+        {
+            "name": "sma",
+            "enable": True,
+            "period": [True, 200, 100, 400, 10, None],
+        },
+    ],
+]
 
 
-@njit(cache=enable_cache)
+@njit(signal_child_signature, cache=enable_cache)
 def calc_signal_3(
     ohlcv_mtf,
     data_mapping,
+    i_params_mtf,
     i_output_mtf,
     s_output,
 ):
     if not check_data_for_signal(
         ohlcv_mtf,
-        get_indicator_need_keys(*define_signal_3_params()),
+        get_indicator_need_keys(i_params_mtf),
         i_output_mtf,
         data_mapping,
     ):

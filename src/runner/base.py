@@ -99,7 +99,7 @@ class BacktestRunner(
         smooth_mode: str = "",
         is_only_performance: bool | str = "",  # 如果是str则视为auto模式
         use_presets_indicator_params: bool = False,
-        use_presets_backtest_params: bool = False,
+        use_presets_backtest_params: bool = True,
         #
         data_path="./data",
         data_suffix=".csv",

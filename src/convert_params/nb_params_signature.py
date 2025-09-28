@@ -23,9 +23,10 @@ list_list_unicode_type = ListType(list_unicode_type)
 
 get_indicator_params_signature = dict_float_type(nb_bool)
 get_backtest_params_signature = dict_float_type(nb_bool)
-get_indicator_need_keys_signature = list_list_unicode_type(
-    list_dict_float_type, list_dict_float_type
-)
+# get_indicator_need_keys_signature = list_list_unicode_type(
+#     list_dict_float_type, list_dict_float_type
+# )
+get_indicator_need_keys_signature = list_list_unicode_type(list_dict_float_type)
 
 
 create_indicator_params_list_signature = list_list_dict_float_type(

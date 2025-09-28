@@ -32,15 +32,6 @@ nb_bool = numba_config["nb"]["bool"]
 np_float = numba_config["np"]["float"]
 
 
-def convert_keys(keys_tuple):
-    value_list, optim_list = keys_tuple
-    value_list = convert_nb_list_to_py_list(value_list)
-    optim_list = convert_nb_list_to_py_list(optim_list)
-    value_list = [get_nb_dict_keys_as_py_dict(i) for i in value_list]
-    optim_list = [get_nb_dict_keys_as_py_dict(i) for i in optim_list]
-    return value_list, optim_list
-
-
 # --- 更新后的 JIT 工具函数 ---
 @njit(cache=enable_cache)
 def get_length_from_list_or_dict(data_list):

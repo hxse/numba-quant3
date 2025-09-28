@@ -16,7 +16,6 @@ from .signal_3 import calc_signal_3, define_signal_3_params
 
 from src.utils.constants import numba_config
 from src.convert_params.param_key_utils import (
-    convert_keys,
     get_length_from_list_or_dict,
     create_list_unicode_empty,
     create_2d_list_unicode_empty,
@@ -44,35 +43,39 @@ si = SignalId
 
 signal_dict = {
     si.signal_0_id.value: {
-        "keys": convert_keys(define_signal_0_params()),
+        "indicator_params": define_signal_0_params,
     },
     si.signal_1_id.value: {
-        "keys": convert_keys(define_signal_1_params()),
+        "indicator_params": define_signal_1_params,
     },
     si.signal_2_id.value: {
-        "keys": convert_keys(define_signal_2_params()),
+        "indicator_params": define_signal_2_params,
     },
     si.signal_3_id.value: {
-        "keys": convert_keys(define_signal_3_params()),
+        "indicator_params": define_signal_3_params,
     },
 }
 
 
 @njit(signal_signature, cache=enable_cache)
-def calc_signal(ohlcv_mtf, data_mapping, i_output_mtf, s_output, b_params):
+def calc_signal(
+    ohlcv_mtf, data_mapping, i_params_mtf, i_output_mtf, s_output, b_params
+):
     signal_select = b_params["signal_select"]
 
     if signal_select == si.signal_0_id.value:
         calc_signal_0(
             ohlcv_mtf,
             data_mapping,
+            i_params_mtf,
             i_output_mtf,
             s_output,
         )
-    if signal_select == si.signal_1_id.value:
+    elif signal_select == si.signal_1_id.value:
         calc_signal_1(
             ohlcv_mtf,
             data_mapping,
+            i_params_mtf,
             i_output_mtf,
             s_output,
         )
@@ -80,6 +83,7 @@ def calc_signal(ohlcv_mtf, data_mapping, i_output_mtf, s_output, b_params):
         calc_signal_2(
             ohlcv_mtf,
             data_mapping,
+            i_params_mtf,
             i_output_mtf,
             s_output,
         )
@@ -87,6 +91,7 @@ def calc_signal(ohlcv_mtf, data_mapping, i_output_mtf, s_output, b_params):
         calc_signal_3(
             ohlcv_mtf,
             data_mapping,
+            i_params_mtf,
             i_output_mtf,
             s_output,
         )

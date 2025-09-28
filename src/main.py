@@ -38,7 +38,7 @@ def main(
     执行整个回测流程并可选地打印运行时间。
     """
 
-    _p1 = {
+    _p0 = {
         "select_id": "signal_0_id",
         "period_list": ["15m"],
         "data_count_list": [40000],
@@ -60,7 +60,7 @@ def main(
     }
     params = {
         "symbol": "mock",
-        **_p1,
+        **_p0,
         "params_count": 1,
         #
         "data_path": "./data",

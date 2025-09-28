@@ -5,6 +5,7 @@ from src.convert_params.param_template import get_indicator_need_keys
 from src.signals.tool import populate_indicator_dicts
 from src.utils.nb_check_keys import check_data_for_signal
 from src.indicators.calculate_indicators import MaxIndicatorCount as mic
+from parallel_signature import signal_child_signature
 
 from src.utils.constants import numba_config
 
@@ -15,38 +16,34 @@ nb_float = numba_config["nb"]["float"]
 nb_bool = numba_config["nb"]["bool"]
 
 
-@njit(cache=enable_cache)
-def define_signal_1_params():
-    num = 0
-    sma_params = (
-        # SMA 0
-        (num, 0, "sma", "enable", np.array([True, True], dtype=nb_float)),
-        (num, 0, "sma", "period", np.array([14, 6, 200, 5], dtype=nb_float)),
-        # SMA 1
-        (num, 1, "sma", "enable", np.array([True, True], dtype=nb_float)),
-        (num, 1, "sma", "period", np.array([200, 100, 40, 5], dtype=nb_float)),
-    )
-    assert sma_params[-1][1] < mic.sma.value, (
-        f"sma数量超出最大限制 {sma_params[-1][1]} {mic.sma.value}"
-    )
-    num += 1
-    _p = ((num, 0, "", "", np.array([0], dtype=nb_float)),)
-    all_indicator_data = (*sma_params, *_p)
-
-    value_list, optim_list = populate_indicator_dicts(num, all_indicator_data)
-    return value_list, optim_list
+define_signal_1_params = [
+    [
+        {
+            "name": "sma",
+            "enable": True,
+            "period": [True, 14, 5, 60, 3, None],
+        },
+        {
+            "name": "sma",
+            "enable": True,
+            "period": [True, 200, 100, 400, 10, None],
+        },
+    ],
+    [],
+]
 
 
-@njit(cache=enable_cache)
+@njit(signal_child_signature, cache=enable_cache)
 def calc_signal_1(
     ohlcv_mtf,
     data_mapping,
+    i_params_mtf,
     i_output_mtf,
     s_output,
 ):
     if not check_data_for_signal(
         ohlcv_mtf,
-        get_indicator_need_keys(*define_signal_1_params()),
+        get_indicator_need_keys(i_params_mtf),
         i_output_mtf,
         data_mapping,
     ):
@@ -58,11 +55,9 @@ def calc_signal_1(
     i_output_a = i_output_mtf[0]
 
     sma_0 = i_output_a["sma_0"]
-
     sma_1 = i_output_a["sma_1"]
 
     s_output["enter_long"] = sma_0 > sma_1
-
     s_output["exit_long"] = sma_0 < sma_1
     s_output["enter_short"] = sma_0 > sma_1
     s_output["exit_short"] = sma_0 < sma_1

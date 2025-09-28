@@ -142,7 +142,9 @@ def run_parallel(
             _i_output = i_output_mtf[m]
             calc_indicators(_ohlcv, _i_params, _i_output)
 
-        calc_signal(_ohlcv_mtf, data_mapping, i_output_mtf, s_output, b_params)
+        calc_signal(
+            _ohlcv_mtf, data_mapping, i_params_mtf, i_output_mtf, s_output, b_params
+        )
 
         calc_backtest(_ohlcv_mtf, b_params, s_output, b_output)
 

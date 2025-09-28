@@ -8,6 +8,7 @@ from src.convert_params.nb_params_signature import (
     get_backtest_params_signature,
     get_indicator_need_keys_signature,
 )
+from src.parallel_signature import params_list_type
 from src.indicators.calculate_indicators import MaxIndicatorCount as mic
 from src.utils.constants import numba_config
 
@@ -55,7 +56,7 @@ def get_indicator_params(use_presets_indicator_params):
 
 
 @njit(get_indicator_need_keys_signature, cache=enable_cache)
-def get_indicator_need_keys(value_list, optim_list):
+def get_indicator_need_keys(value_list):
     outer_list = List.empty_list(List.empty_list(types.unicode_type))
 
     for value_dict in value_list:

@@ -69,9 +69,18 @@ indicators_signature = types.void(
 signal_signature = types.void(
     data_mtf_type,  # ohlcv_mtf
     mapping_dict_type,  # data_mapping
+    params_list_type,  # i_params_mtf
     indicators_list_type,  # i_output_mtf
     signal_output_type,  # s_output
     param_dict_type,  # b_params
+)
+
+signal_child_signature = types.void(
+    data_mtf_type,  # ohlcv_mtf
+    mapping_dict_type,  # data_mapping
+    params_list_type,  # i_params_mtf
+    indicators_list_type,  # i_output_mtf
+    signal_output_type,  # s_output
 )
 
 backtest_signature = types.void(

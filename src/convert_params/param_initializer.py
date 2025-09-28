@@ -57,13 +57,10 @@ def init_params(
 
     ohlcv_mtf_np_list = [i for i in ohlcv_mtf_np_list if i is not None]
 
-    value_list, optim_list = signal_dict[signal_select_id]["keys"]
-    assert len(value_list) == len(optim_list), (
-        f"value_list和optim_list长度应该相等 {value_list} {optim_list}"
-    )
+    indicator_params = signal_dict[signal_select_id]["indicator_params"]
 
-    assert len(ohlcv_mtf_np_list) == len(value_list), (
-        f"mtf多时间周期数据不匹配 {len(ohlcv_mtf_np_list)} {len(value_list)}"
+    assert len(ohlcv_mtf_np_list) == len(indicator_params), (
+        f"mtf多时间周期数据不匹配 {len(ohlcv_mtf_np_list)} {len(indicator_params)}"
     )
 
     ohlcv_mtf = create_list_dict_float_1d_empty()
@@ -97,14 +94,27 @@ def init_params(
 
     indicator_params_mtf = create_indicator_params_list(
         params_count,
-        len(value_list),
+        len(indicator_params),
         use_presets_indicator_params=use_presets_indicator_params,
     )
 
-    for idx, keys_array in enumerate(value_list):
-        for key, value in keys_array.items():
-            target_array = np.full((params_count,), value, dtype=np_float)
-            set_params_list_value_mtf(idx, key, indicator_params_mtf, target_array)
+    for mtf_idx, item in enumerate(indicator_params):
+        for ind_idx, i in enumerate(item):
+            for key, value in i.items():
+                if key == "enable":
+                    _value = value
+                elif isinstance(value, list):
+                    assert len(value) == 6, f"数组长度需要为6,实际为{len(value)}"
+                    if value[0]:
+                        _value = value[1]
+                else:
+                    continue
+
+                _key = f"{i['name']}_{key}_{ind_idx}"
+                target_array = np.full((params_count,), _value, dtype=np_float)
+                set_params_list_value_mtf(
+                    mtf_idx, _key, indicator_params_mtf, target_array
+                )
 
     # ---- 年化因子 ----
 
